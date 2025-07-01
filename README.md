@@ -1,4 +1,4 @@
-# Typst installer
+# Typst Installer
 
 🤖 `curl | sh` installer script for Typst \
 💡 Inspired by [denoland/deno_install]
@@ -7,8 +7,8 @@
 
 ```sh
 # ✨🚀
-curl -fsSL https://typst.community/typst-install/install.sh | sh
-typst compile paper.typ
+curl -fsSL https://typst.community/typst-install/install.sh | bash
+typst help
 ```
 
 </table>
@@ -28,7 +28,7 @@ instructions] and download a binary from [typst/typst releases].
 Linux, macOS, WSL
 
 ```sh
-curl -fsSL https://typst.community/typst-install/install.sh | sh
+curl -fsSL https://typst.community/typst-install/install.sh | bash
 ```
 
 Windows

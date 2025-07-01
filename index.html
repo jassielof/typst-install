@@ -1,2 +1,105 @@
-<meta http-equiv="refresh" content="0;url=https://github.com/typst-community/typst-install">
-<script>location.replace("https://github.com/typst-community/typst-install")</script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@5"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Typst Install</title>
+  </head>
+  <body class="font-sans">
+    <main
+      class="flex flex-col items-center justify-center min-h-screen p-4 text-center"
+    >
+      <div class="max-w-2xl">
+        <h1 class="text-5xl md:text-7xl font-bold">Typst</h1>
+        <p class="py-6 text-lg md:text-xl text-base-content/70">
+          The installer for the modern, scriptable typesetting system.
+        </p>
+
+        <div class="tabs tabs-boxed justify-center" id="os-tabs">
+          <a class="tab tab-active" data-os="posix">macOS / Linux</a>
+          <a class="tab" data-os="windows">Windows</a>
+        </div>
+
+        <div id="command-container" class="mt-4">
+          <div id="posix-command" class="mockup-code text-left">
+            <pre
+              data-prefix="$"
+            ><code>curl -fsSL https://typst.community/typst-install/install.sh | bash</code></pre>
+            <button
+              class="btn btn-ghost btn-sm copy-btn"
+              onclick="copyCommand('posix-command')"
+            >
+              Copy
+            </button>
+          </div>
+          <div id="windows-command" class="mockup-code text-left hidden">
+            <pre
+              data-prefix=">"
+            ><code>irm https://typst.community/typst-install/install.ps1 | iex</code></pre>
+            <button
+              class="btn btn-ghost btn-sm copy-btn"
+              onclick="copyCommand('windows-command')"
+            >
+              Copy
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-8 text-base-content/50">
+          <p>
+            Need help? Visit the
+            <a
+              href="https://github.com/typst/typst"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="link"
+              >Typst GitHub repository</a
+            >.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const tabs = document.querySelectorAll("#os-tabs .tab");
+      const posixCommand = document.getElementById("posix-command");
+      const windowsCommand = document.getElementById("windows-command");
+
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", (e) => {
+          e.preventDefault();
+          tabs.forEach((t) => t.classList.remove("tab-active"));
+          tab.classList.add("tab-active");
+
+          const os = tab.getAttribute("data-os");
+          if (os === "windows") {
+            posixCommand.classList.add("hidden");
+            windowsCommand.classList.remove("hidden");
+          } else {
+            windowsCommand.classList.add("hidden");
+            posixCommand.classList.remove("hidden");
+          }
+        });
+      });
+
+      function copyCommand(elementId) {
+        const commandEl = document.querySelector(`#${elementId} code`);
+        const textToCopy = commandEl.innerText;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          const button = document.querySelector(`#${elementId} .copy-btn`);
+          const originalText = button.innerText;
+          button.innerText = "Copied!";
+          setTimeout(() => {
+            button.innerText = originalText;
+          }, 2000);
+        });
+      }
+    </script>
+  </body>
+</html>
