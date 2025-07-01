@@ -1,81 +1,223 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Keep this script simple and easily auditable!
-set -e
-if [ -n "$DEBUG" ]; then
-  set -x
+set -euo pipefail
+
+# --- Helper Functions ---
+# Based on https://github.com/oven-sh/bun/blob/main/install.sh
+
+# Reset
+Color_Off=''
+# Regular Colors
+Red=''
+Green=''
+Dim=''
+# Bold
+Bold_Green=''
+Bold_White=''
+
+if [[ -t 1 ]]; then
+    Color_Off='\033[0m' # Text Reset
+    Red='\033[0;31m'    # Red
+    Green='\033[0;32m'  # Green
+    Dim='\033[0;2m'     # Dim
+    Bold_Green='\033[1;32m'
+    Bold_White='\033[1m'
 fi
 
-if [ "$OS" = "Windows_NT" ]; then
-	target="x86_64-pc-windows-msvc"
-else
-	case $(uname -sm) in
-    "Darwin x86_64") target="x86_64-apple-darwin";;
-    "Darwin arm64") target="aarch64-apple-darwin";;
-    "Linux aarch64") target="aarch64-unknown-linux-musl";;
-    *) target="x86_64-unknown-linux-musl";;
-	esac
+error() {
+    echo -e "${Red}error${Color_Off}:" "$@" >&2
+    exit 1
+}
+
+info() {
+    echo -e "${Dim}$@${Color_Off}"
+}
+
+success() {
+    echo -e "${Green}$@${Color_Off}"
+}
+
+# --- Main Script ---
+
+if [[ ${OS:-} == "Windows_NT" ]]; then
+    error "This script is not for Windows. Please use the PowerShell script:"
+    info "irm https://typst.community/typst-install/install.ps1 | iex"
+    exit 1
 fi
 
-if [ "$OS" = "Windows_NT" ]; then
-	archive_ext=".zip"
-else
-  archive_ext=".tar.xz"
-fi
+# Check for required tools
+command -v curl >/dev/null || error "curl is required to install Typst"
+command -v tar >/dev/null || error "tar is required to install Typst"
 
-if [ "$OS" = "Windows_NT" ]; then
-	exe_ext=".exe"
-else
-  exe_ext=""
-fi
+# Determine target architecture
+case "$(uname -sm)" in
+"Darwin x86_64") target="x86_64-apple-darwin" ;;
+"Darwin arm64") target="aarch64-apple-darwin" ;;
+"Linux aarch64") target="aarch64-unknown-linux-musl" ;;
+*) target="x86_64-unknown-linux-musl" ;;
+esac
 
+archive_ext=".tar.xz"
 folder="typst-$target"
 file="$folder$archive_ext"
 
+# Determine installation directory
 typst_install="${TYPST_INSTALL:-$HOME/.typst}"
+bin_dir="$typst_install/bin"
+exe="$bin_dir/typst"
+
+# Determine version to install
+version="${1:-latest}"
+if [[ "$version" == "latest" ]]; then
+    url="https://github.com/typst/typst/releases/latest/download/$file"
+else
+    url="https://github.com/typst/typst/releases/download/v$version/$file"
+fi
+
+# Download and extract
+info "Downloading Typst from $url"
 mkdir -p "$typst_install"
+curl --fail --location --progress-bar -o "$typst_install/$file" "$url" || error "Failed to download Typst"
 
-if [ -n "$1" ]; then
-  url="https://github.com/typst/typst/releases/download/v$1/$file"
-else
-  url="https://github.com/typst/typst/releases/latest/download/$file"
-fi
-
-echo "Downloading Typst from $url"
-curl -fsSL "$url" -o "$typst_install/$file"
-if [ "$archive_ext" = ".zip" ]; then
-  unzip -d "$typst_install" -o "$typst_install/$file"
-else
-  tar -xJf "$typst_install/$file" -C "$typst_install"
-fi
+info "Extracting archive..."
+tar -xJf "$typst_install/$file" -C "$typst_install" || error "Failed to extract Typst"
 rm -f "$typst_install/$file"
 
-mkdir -p "$typst_install/bin"
-mv -f "$typst_install/$folder/typst$exe_ext" "$typst_install/bin/typst$exe_ext"
-chmod +x "$typst_install/bin/typst$exe_ext"
+# Organize files
+mkdir -p "$bin_dir"
+mv -f "$typst_install/$folder/typst" "$exe"
+chmod +x "$exe"
 
-mv -f "$typst_install/$folder"/* "$typst_install"
-rm -rf "${typst_install:?}/$folder"
+# Move license and other files to the root of typst_install
+# Use a temporary directory to avoid issues with `mv` source and destination being the same
+temp_dir=$(mktemp -d)
+mv "$typst_install/$folder"/* "$temp_dir/"
+mv "$temp_dir"/* "$typst_install/"
+rm -rf "$temp_dir"
+rm -rf "$typst_install/$folder"
 
-echo "Typst installed to $typst_install/bin/typst$exe_ext"
+tildify() {
+    if [[ "$1" == "$HOME/"* ]]; then
+        echo "~/${1#"$HOME/"}"
+    else
+        echo "$1"
+    fi
+}
 
-if command -v typst >/dev/null; then
-	echo "Run 'typst$exe_ext --help' to get started"
-else
-	case $SHELL in
-    /bin/zsh) shell_profile=".zshrc";;
-    *) shell_profile=".bashrc";;
-	esac
-  cat <<EOF
-Manually add the directory to your \$HOME/$shell_profile (or similar)
-  export TYPST_INSTALL="$typst_install"
-  export PATH="\$TYPST_INSTALL/bin:\$PATH"
+success "Typst was installed successfully to ${Bold_Green}$(tildify "$exe")"
 
-Example:
-  echo 'export TYPST_INSTALL="$typst_install"' >> ~/$shell_profile
-  echo 'export PATH="\$TYPST_INSTALL/bin:\$PATH"' >> ~/$shell_profile
+# --- Shell Setup: PATH and Completions ---
 
-Run '$typst_install/bin/typst$exe_ext --help' to get started
+# Add to PATH if not already there
+if ! command -v typst >/dev/null; then
+    echo
+    info "Adding Typst to your PATH..."
+
+    shell_name=$(basename "$SHELL")
+    profile_path=""
+    profile_cmd=""
+    refresh_cmd=""
+
+    case "$shell_name" in
+    fish)
+        profile_path="$HOME/.config/fish/config.fish"
+        # fish handles paths with spaces and tilde expansion differently
+        install_dir_fish="\"$typst_install\""
+        if [[ "$typst_install" == "$HOME/"* ]]; then
+            install_dir_fish="~/${typst_install#"$HOME/"}"
+        fi
+        profile_cmd=$(cat <<EOF
+set -gx TYPST_INSTALL $install_dir_fish
+set -gx PATH "\$TYPST_INSTALL/bin" \$PATH
 EOF
+)
+        refresh_cmd="source $(tildify "$profile_path")"
+        ;;
+    zsh | bash)
+        if [[ "$shell_name" == "zsh" ]]; then
+            profile_path="$HOME/.zshrc"
+            refresh_cmd="exec $SHELL"
+        else
+            profile_path="$HOME/.bashrc"
+            refresh_cmd="source $(tildify "$profile_path")"
+            if [[ -f "$HOME/.bash_profile" && ! -L "$HOME/.bash_profile" ]]; then
+                if ! grep -q ".bashrc" "$HOME/.bash_profile"; then
+                    info "To make 'typst' available in login shells, please add 'source ~/.bashrc' to your ~/.bash_profile"
+                fi
+            fi
+        fi
+
+        # Using quoted string for install dir to handle spaces
+        quoted_install_dir="\"${typst_install//\"/\\\"}\""
+        if [[ $quoted_install_dir == "\"$HOME/"* ]]; then
+            # Replace home path with $HOME for portability
+            quoted_install_dir="\$HOME/${quoted_install_dir#\"$HOME/}"
+        fi
+
+        profile_cmd=$(cat <<EOF
+export TYPST_INSTALL=$quoted_install_dir
+export PATH="\$TYPST_INSTALL/bin:\$PATH"
+EOF
+)
+        ;;
+    *)
+        # Fallback for other shells
+        profile_path="$HOME/.profile"
+        quoted_install_dir="\"${typst_install//\"/\\\"}\""
+        if [[ $quoted_install_dir == "\"$HOME/"* ]]; then
+            quoted_install_dir="\$HOME/${quoted_install_dir#\"$HOME/}"
+        fi
+        profile_cmd=$(cat <<EOF
+export TYPST_INSTALL=$quoted_install_dir
+export PATH="\$TYPST_INSTALL/bin:\$PATH"
+EOF
+)
+        refresh_cmd="exec $SHELL"
+        ;;
+    esac
+
+    if [[ -w "$profile_path" || (! -e "$profile_path" && -w "$(dirname "$profile_path")") ]]; then
+        {
+            echo -e '\n# Typst'
+            echo "$profile_cmd"
+        } >>"$profile_path"
+        info "Added Typst to PATH in $(tildify "$profile_path")"
+        echo
+        info "To get started, run the following command or restart your shell:"
+        echo
+        info "${Bold_White}  $refresh_cmd${Color_Off}"
+    else
+        echo
+        info "Could not automatically modify your shell profile."
+        info "Please add the following to your shell configuration file ($(tildify "$profile_path")):"
+        echo
+        info "${Bold_White}$profile_cmd${Color_Off}"
+    fi
 fi
 
-echo "Stuck? Open an Issue https://github.com/typst-community/typst-install/issues"
+# Install shell completions
+info "Attempting to install shell completions..."
+shell_name=$(basename "$SHELL")
+case "$shell_name" in
+fish)
+    # The completions file will be downloaded from the repo
+    completion_url="https://raw.githubusercontent.com/typst-community/typst-install/main/typst.fish"
+    completions_dir="$HOME/.config/fish/completions"
+    mkdir -p "$completions_dir"
+    info "Downloading fish completions from $completion_url"
+    curl --fail --location --progress-bar -o "$completions_dir/typst.fish" "$completion_url" || error "Failed to download fish completions"
+    success "Fish completions installed successfully."
+    ;;
+zsh | bash)
+    # TODO: Add support for Zsh and Bash completions
+    info "Completions for $shell_name are not yet available. Contributions are welcome!"
+    ;;
+*)
+    info "Could not detect shell, skipping completion installation."
+    ;;
+esac
+
+
+echo
+info "Run 'typst --help' to get started."
+info "Stuck? Open an Issue at https://github.com/typst-community/typst-installer/issues"
