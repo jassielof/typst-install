@@ -201,7 +201,7 @@ shell_name=$(basename "$SHELL")
 case "$shell_name" in
 fish)
     # The completions file will be downloaded from the repo
-    completion_url="https://raw.githubusercontent.com/typst-community/typst-install/main/typst.fish"
+    completion_url="https://raw.githubusercontent.com/typst-community/typst-install/main/completions/typst.fish"
     completions_dir="$HOME/.config/fish/completions"
     mkdir -p "$completions_dir"
     info "Downloading fish completions from $completion_url"
@@ -209,8 +209,51 @@ fish)
     success "Fish completions installed successfully."
     ;;
 zsh | bash)
-    # TODO: Add support for Zsh and Bash completions
-    info "Completions for $shell_name are not yet available. Contributions are welcome!"
+    completion_url="https://raw.githubusercontent.com/typst-community/typst-install/main/completions/typst.bash"
+    info "Downloading $shell_name completions from $completion_url"
+
+    if [[ "$shell_name" == "zsh" ]]; then
+        # Zsh
+        # fpath is an array of directories to search for completion functions
+        # We'll try to install to the first user-writable directory in fpath
+        completions_dir=""
+        for dir in "${fpath[@]}"; do
+            if [[ -w "$dir" ]]; then
+                completions_dir="$dir"
+                break
+            fi
+        done
+        # Fallback to a common user location if no writable dir in fpath
+        if [[ -z "$completions_dir" ]]; then
+            completions_dir="$HOME/.zsh/completions"
+        fi
+        mkdir -p "$completions_dir"
+        curl --fail --location --progress-bar -o "$completions_dir/_typst" "$completion_url" || error "Failed to download zsh completions"
+        success "Zsh completions installed to $(tildify "$completions_dir/_typst")"
+        info "You may need to restart your shell for completions to take effect."
+    else
+        # Bash
+        # bash-completion checks directories in a specific order.
+        # We'll try a few common locations.
+        completions_dir=""
+        if [[ -d "/etc/bash_completion.d" && -w "/etc/bash_completion.d" ]]; then
+            completions_dir="/etc/bash_completion.d"
+        elif [[ -d "$HOME/.local/share/bash-completion/completions" ]]; then
+            completions_dir="$HOME/.local/share/bash-completion/completions"
+        elif [[ -d "$HOME/.bash_completion.d" ]]; then
+            completions_dir="$HOME/.bash_completion.d"
+        fi
+
+        if [[ -n "$completions_dir" ]]; then
+            mkdir -p "$completions_dir"
+            curl --fail --location --progress-bar -o "$completions_dir/typst" "$completion_url" || error "Failed to download bash completions"
+            success "Bash completions installed to $(tildify "$completions_dir/typst")"
+            info "You may need to restart your shell or source the file for completions to take effect."
+        else
+            error "Could not find a bash completion directory."
+            info "Please install completions manually from $completion_url"
+        fi
+    fi
     ;;
 *)
     info "Could not detect shell, skipping completion installation."
