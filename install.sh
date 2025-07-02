@@ -30,19 +30,20 @@ error() {
 }
 
 info() {
-    echo -e "${Dim}$@${Color_Off}"
+    echo -e "${Dim}$*${Color_Off}"
 }
 
 success() {
-    echo -e "${Green}$@${Color_Off}"
+    echo -e "${Green}$*${Color_Off}"
 }
 
 # --- Main Script ---
 
 if [[ ${OS:-} == "Windows_NT" ]]; then
-    error "This script is not for Windows. Please use the PowerShell script:"
+    # The error function exits, so this info message must come first.
+    info "For Windows, please use the PowerShell script:"
     info "irm https://typst.community/typst-install/install.ps1 | iex"
-    exit 1
+    error "This script is not for Windows."
 fi
 
 # Check for required tools
@@ -94,11 +95,11 @@ temp_dir=$(mktemp -d)
 mv "$typst_install/$folder"/* "$temp_dir/"
 mv "$temp_dir"/* "$typst_install/"
 rm -rf "$temp_dir"
-rm -rf "$typst_install/$folder"
+rm -rf "${typst_install:?}/${folder:?}"
 
 tildify() {
     if [[ "$1" == "$HOME/"* ]]; then
-        echo "~/${1#"$HOME/"}"
+        echo "\$HOME/${1#"$HOME/"}"
     else
         echo "$1"
     fi
@@ -124,7 +125,7 @@ if ! command -v typst >/dev/null; then
         # fish handles paths with spaces and tilde expansion differently
         install_dir_fish="\"$typst_install\""
         if [[ "$typst_install" == "$HOME/"* ]]; then
-            install_dir_fish="~/${typst_install#"$HOME/"}"
+            install_dir_fish="\$HOME/${typst_install#"$HOME/"}"
         fi
         profile_cmd=$(cat <<EOF
 set -gx TYPST_INSTALL $install_dir_fish
@@ -151,7 +152,7 @@ EOF
         quoted_install_dir="\"${typst_install//\"/\\\"}\""
         if [[ $quoted_install_dir == "\"$HOME/"* ]]; then
             # Replace home path with $HOME for portability
-            quoted_install_dir="\$HOME/${quoted_install_dir#\"$HOME/}"
+            quoted_install_dir="\$HOME/${quoted_install_dir#\""$HOME"/}"
         fi
 
         profile_cmd=$(cat <<EOF
@@ -165,7 +166,7 @@ EOF
         profile_path="$HOME/.profile"
         quoted_install_dir="\"${typst_install//\"/\\\"}\""
         if [[ $quoted_install_dir == "\"$HOME/"* ]]; then
-            quoted_install_dir="\$HOME/${quoted_install_dir#\"$HOME/}"
+            quoted_install_dir="\$HOME/${quoted_install_dir#\""$HOME"/}"
         fi
         profile_cmd=$(cat <<EOF
 export TYPST_INSTALL=$quoted_install_dir
@@ -217,6 +218,8 @@ zsh | bash)
         # fpath is an array of directories to search for completion functions
         # We'll try to install to the first user-writable directory in fpath
         completions_dir=""
+        # SC2154: fpath is a standard zsh array variable.
+        # shellcheck disable=SC2154
         for dir in "${fpath[@]}"; do
             if [[ -w "$dir" ]]; then
                 completions_dir="$dir"
@@ -250,8 +253,9 @@ zsh | bash)
             success "Bash completions installed to $(tildify "$completions_dir/typst")"
             info "You may need to restart your shell or source the file for completions to take effect."
         else
-            error "Could not find a bash completion directory."
+            info "Could not find a bash completion directory."
             info "Please install completions manually from $completion_url"
+            error "Automatic completion installation failed."
         fi
     fi
     ;;
