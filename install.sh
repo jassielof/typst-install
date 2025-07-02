@@ -37,6 +37,12 @@ success() {
     echo -e "${Green}$*${Color_Off}"
 }
 
+# --- Configuration ---
+# You can override these variables, e.g. `OWNER=foo/bar ./install.sh`
+OWNER="${OWNER:-jassielof/typst-install}"
+TYPST_REPO="typst/typst"
+COMPLETIONS_DIR="completions"
+
 # --- Main Script ---
 
 if [[ ${OS:-} == "Windows_NT" ]]; then
@@ -70,9 +76,9 @@ exe="$bin_dir/typst"
 # Determine version to install
 version="${1:-latest}"
 if [[ "$version" == "latest" ]]; then
-    url="https://github.com/typst/typst/releases/latest/download/$file"
+    url="https://github.com/$TYPST_REPO/releases/latest/download/$file"
 else
-    url="https://github.com/typst/typst/releases/download/v$version/$file"
+    url="https://github.com/$TYPST_REPO/releases/download/v$version/$file"
 fi
 
 # Download and extract
@@ -202,7 +208,7 @@ shell_name=$(basename "$SHELL")
 case "$shell_name" in
 fish)
     # The completions file will be downloaded from the repo
-    completion_url="https://raw.githubusercontent.com/typst-community/typst-install/main/completions/typst.fish"
+    completion_url="https://raw.githubusercontent.com/$OWNER/main/$COMPLETIONS_DIR/typst.fish"
     completions_dir="$HOME/.config/fish/completions"
     mkdir -p "$completions_dir"
     info "Downloading fish completions from $completion_url"
@@ -210,7 +216,7 @@ fish)
     success "Fish completions installed successfully."
     ;;
 zsh | bash)
-    completion_url="https://raw.githubusercontent.com/typst-community/typst-install/main/completions/typst.bash"
+    completion_url="https://raw.githubusercontent.com/$OWNER/main/$COMPLETIONS_DIR/typst.bash"
     info "Downloading $shell_name completions from $completion_url"
 
     if [[ "$shell_name" == "zsh" ]]; then
@@ -267,4 +273,4 @@ esac
 
 echo
 info "Run 'typst --help' to get started."
-info "Stuck? Open an Issue at https://github.com/typst-community/typst-installer/issues"
+info "Stuck? Open an Issue at https://github.com/$OWNER/issues"
