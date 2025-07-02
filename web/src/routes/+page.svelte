@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { effect } from 'svelte';
   import { Copy, Check } from 'lucide-svelte';
 
   const REPO_URL = 'https://github.com/jassielof/typst-install';
@@ -9,10 +9,12 @@
   const POSIX_COMMAND = `curl -fsSL ${POSIX_URL} | bash`;
   const WINDOWS_COMMAND = `irm ${WINDOWS_URL} | iex`;
 
-  let os: 'posix' | 'windows' = 'posix';
-  let copiedCommand: string | null = null;
+  // Use $state for reactive state
+  let os = $state<'posix' | 'windows'>('posix');
+  let copiedCommand = $state<string | null>(null);
 
-  onMount(() => {
+  // Replace onMount with $effect
+  effect(() => {
     if (navigator.userAgent.includes('Win')) {
       os = 'windows';
     }
@@ -41,9 +43,8 @@
         name="os_tabs"
         class="tab"
         aria-label="macOS / Linux"
-        bind:group={os}
-        value="posix"
         checked={os === 'posix'}
+        on:change={() => (os = 'posix')}
       />
       <div class="tab-content mt-4 w-full">
         <div class="relative">
@@ -69,9 +70,8 @@
         name="os_tabs"
         class="tab"
         aria-label="Windows"
-        bind:group={os}
-        value="windows"
         checked={os === 'windows'}
+        on:change={() => (os = 'windows')}
       />
       <div class="tab-content mt-4 w-full">
         <div class="relative">
