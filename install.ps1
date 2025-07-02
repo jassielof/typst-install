@@ -6,6 +6,7 @@ $ErrorActionPreference = 'Stop'
 # You can override these variables, e.g. `OWNER=foo/bar ./install.ps1`
 $Owner = $env:OWNER -or 'jassielof/typst-install'
 $TypstRepo = 'typst/typst'
+$CompletionsDir = 'completions'
 
 # --- Argument Parsing ---
 $Version = if ($Args.Length -ge 1) { $Args[0] } else { 'latest' }
@@ -65,6 +66,31 @@ if (!(";${UserPath};".ToLower().Contains(";$BinDir;".ToLower()))) {
 if ($env:GITHUB_PATH) {
   Add-Content -Path $env:GITHUB_PATH -Value $BinDir
 }
+
+# --- Shell Completions ---
+Write-Output "Installing PowerShell completions..."
+try {
+    $CompletionUrl = "https://raw.githubusercontent.com/$Owner/main/$CompletionsDir/typst.ps1"
+    $CompletionFile = Join-Path $TypstInstall 'typst.ps1'
+
+    Write-Output "Downloading completions from $CompletionUrl"
+    Invoke-WebRequest -Uri $CompletionUrl -OutFile $CompletionFile
+
+    if (!(Test-Path $PROFILE)) {
+        New-Item -Path $PROFILE -ItemType File -Force | Out-Null
+    }
+
+    $SourceCommand = ". `"$CompletionFile`""
+    if (!(Select-String -Path $PROFILE -Pattern ([regex]::Escape($SourceCommand)) -Quiet)) {
+        Add-Content -Path $PROFILE -Value "`n# Typst Completions`n$SourceCommand"
+        Write-Output "Completions installed. Please restart your shell or run '. `$PROFILE`' to enable them."
+    } else {
+        Write-Output "Completions are already installed."
+    }
+} catch {
+    Write-Warning "Failed to install PowerShell completions: $_"
+}
+
 
 # --- Final Message ---
 Write-Output "Typst was installed successfully to $Exe"
