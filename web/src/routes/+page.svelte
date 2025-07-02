@@ -1,9 +1,10 @@
 <script lang="ts">
-  const POSIX_URL = 'https://typst.community/typst-install/install.sh';
-  const WINDOWS_URL = 'https://typst.community/typst-install/install.ps1';
+  const REPO_URL = 'https://github.com/jassielof/typst-install';
+  const PAGE_URL = 'https://jassielof.github.io/typst-install';
+  const POSIX_URL = `${PAGE_URL}/install.sh`;
+  const WINDOWS_URL = `${PAGE_URL}/install.ps1`;
   const POSIX_COMMAND = `curl -fsSL ${POSIX_URL} | bash`;
   const WINDOWS_COMMAND = `irm ${WINDOWS_URL} | iex`;
-  const REPO_URL = 'https://github.com/jassielof/typst-install';
 
   let os: 'posix' | 'windows' = 'posix';
 
