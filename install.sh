@@ -243,25 +243,26 @@ zsh | bash)
     else
         # Bash
         # bash-completion checks directories in a specific order.
-        # We'll try a few common locations.
+        # We'll try a few common locations, falling back to a user-local one.
         completions_dir=""
+        # Check for system-wide, user-writable directory first.
         if [[ -d "/etc/bash_completion.d" && -w "/etc/bash_completion.d" ]]; then
             completions_dir="/etc/bash_completion.d"
-        elif [[ -d "$HOME/.local/share/bash-completion/completions" ]]; then
+        else
+            # Default to user-local directory, which is a common standard.
             completions_dir="$HOME/.local/share/bash-completion/completions"
-        elif [[ -d "$HOME/.bash_completion.d" ]]; then
-            completions_dir="$HOME/.bash_completion.d"
         fi
 
-        if [[ -n "$completions_dir" ]]; then
-            mkdir -p "$completions_dir"
-            curl --fail --location --progress-bar -o "$completions_dir/typst" "$completion_url" || error "Failed to download bash completions"
-            success "Bash completions installed to $(tildify "$completions_dir/typst")"
-            info "You may need to restart your shell or source the file for completions to take effect."
-        else
-            info "Could not find a bash completion directory."
-            info "Please install completions manually from $completion_url"
-            error "Automatic completion installation failed."
+        mkdir -p "$completions_dir"
+        curl --fail --location --progress-bar -o "$completions_dir/typst" "$completion_url" || error "Failed to download bash completions"
+        success "Bash completions installed to $(tildify "$completions_dir/typst")"
+        info "You may need to restart your shell for completions to take effect."
+
+        # Check if bash-completion is likely not configured for the user
+        if ! grep -q "bash_completion" "$HOME/.bashrc" && [[ ! -f "/etc/bash_completion" ]]; then
+            echo
+            info "To enable completions, you may need to add the following to your ~/.bashrc:"
+            info "${Bold_White}  source \"$(tildify "$completions_dir/typst")\"${Color_Off}"
         fi
     fi
     ;;
