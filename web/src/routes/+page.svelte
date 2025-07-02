@@ -35,7 +35,7 @@
       The installer for the modern, scriptable typesetting system.
     </p>
 
-    <div class="tabs tabs-boxed justify-center">
+    <div class="tabs tabs-box justify-center">
       <input
         type="radio"
         name="os_tabs"
