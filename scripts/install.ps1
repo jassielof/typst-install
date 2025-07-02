@@ -7,6 +7,7 @@ $ErrorActionPreference = 'Stop'
 $Owner = if ($env:OWNER -and $env:OWNER.ToLower() -ne 'true') { $env:OWNER } else { 'jassielof/typst-install' }
 $TypstRepo = 'typst/typst'
 $CompletionsDir = 'completions'
+$BaseUrl = 'https://jassielof.github.io/typst-install'
 
 # --- Argument Parsing ---
 $Version = if ($Args.Length -ge 1) { $Args[0] } else { 'latest' }
@@ -70,7 +71,7 @@ if ($env:GITHUB_PATH) {
 # --- Shell Completions ---
 Write-Output "Installing PowerShell completions..."
 try {
-    $CompletionUrl = "https://raw.githubusercontent.com/$Owner/main/$CompletionsDir/typst.ps1"
+    $CompletionUrl = "$BaseUrl/$CompletionsDir/typst.ps1"
     $CompletionFile = Join-Path $TypstInstall 'typst.ps1'
 
     Write-Output "Downloading completions from $CompletionUrl"
