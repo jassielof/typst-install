@@ -39,7 +39,7 @@ export TYPST_INSTALL="/usr/local"
 ----
 
 .Windows
-[source,ps1]
+[source, ps1, subs="attributes"]
 ----
 $Env:TYPST_INSTALL = "C:\Program Files\typst"
 {dos-script}
@@ -48,17 +48,17 @@ $Env:TYPST_INSTALL = "C:\Program Files\typst"
 === Installation of Specific Version
 
 .Linux, macOS, WSL
-[source,sh]
+[source, sh, subs="attributes"]
 ----
 {posix-script} -s 0.13.1
 ----
 
 .Windows
-[source,ps1]
+[source, ps1, subs="attributes"]
 ----
 v="0.10.0"; {dos-script}
 ----
 
 == Disclaimer
 
-NOTE: This is not an official Typst installer.
+This is not an official Typst installer.
