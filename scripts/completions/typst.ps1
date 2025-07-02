@@ -24,13 +24,14 @@ $scriptBlock = {
     $compileWatchOpts = '--format', '-f', '--pages', '--pdf-standard', '--ppi', '--make-deps', '--open', '--timings'
     $watchOpts = '--no-serve', '--no-reload', '--port'
     $initOpts = '--package-path', '--package-cache-path'
+    $fontsOpts = '--font-path', '--ignore-system-fonts', '--variants'
 
     # --- Logic ---
 
-    # Complete main command
-    if ($commandElements.Count -eq 1) {
-        return $commands.GetEnumerator() | ForEach-Object {
-            [System.Management.Automation.CompletionResult]::new($_.Name, $_.Name, 'ParameterName', $_.Value)
+    # Complete main command or partial subcommand
+    if (($commandElements.Count -eq 1 -or ($commandElements.Count -eq 2 -and $wordToComplete -ne '' -and $commandElements[1].Extent.Text -eq $wordToComplete)) -and $wordToComplete -notlike '-*') {
+        return $commands.Keys | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterName', $commands[$_])
         }
     }
 
@@ -61,6 +62,7 @@ $scriptBlock = {
             'w'       { $globalOptions + $compileWatchQueryOpts + $compileWatchOpts + $watchOpts }
             'init'    { $globalOptions + $initOpts }
             'query'   { $globalOptions + $compileWatchQueryOpts }
+            'fonts'   { $globalOptions + $fontsOpts }
             default   { $globalOptions }
         }
         return $options | Where-Object { $_ -like "$wordToComplete*" }
