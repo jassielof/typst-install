@@ -42,13 +42,14 @@ success() {
 OWNER="${OWNER:-jassielof/typst-install}"
 TYPST_REPO="typst/typst"
 COMPLETIONS_DIR="completions"
+BASE_URL="https://jassielof.github.io/typst-install"
 
 # --- Main Script ---
 
 if [[ ${OS:-} == "Windows_NT" ]]; then
     # The error function exits, so this info message must come first.
     info "For Windows, please use the PowerShell script:"
-    info "irm https://typst.community/typst-install/install.ps1 | iex"
+    info "irm $BASE_URL/install.ps1 | iex"
     error "This script is not for Windows."
 fi
 
@@ -208,7 +209,7 @@ shell_name=$(basename "$SHELL")
 case "$shell_name" in
 fish)
     # The completions file will be downloaded from the repo
-    completion_url="https://raw.githubusercontent.com/$OWNER/main/$COMPLETIONS_DIR/typst.fish"
+    completion_url="$BASE_URL/$COMPLETIONS_DIR/typst.fish"
     completions_dir="$HOME/.config/fish/completions"
     mkdir -p "$completions_dir"
     info "Downloading fish completions from $completion_url"
@@ -217,7 +218,7 @@ fish)
     ;;
 zsh | bash)
     if [[ "$shell_name" == "zsh" ]]; then
-        completion_url="https://raw.githubusercontent.com/$OWNER/main/$COMPLETIONS_DIR/typst.zsh"
+        completion_url="$BASE_URL/$COMPLETIONS_DIR/typst.zsh"
         info "Downloading zsh completions from $completion_url"
         # Zsh
         # fpath is an array of directories to search for completion functions
@@ -241,7 +242,7 @@ zsh | bash)
         info "You may need to restart your shell for completions to take effect."
     else
         # Bash
-        completion_url="https://raw.githubusercontent.com/$OWNER/main/$COMPLETIONS_DIR/typst.bash"
+        completion_url="$BASE_URL/$COMPLETIONS_DIR/typst.bash"
         info "Downloading bash completions from $completion_url"
         # bash-completion checks directories in a specific order.
         # We'll try a few common locations, falling back to a user-local one.
