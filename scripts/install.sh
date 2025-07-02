@@ -216,10 +216,9 @@ fish)
     success "Fish completions installed successfully."
     ;;
 zsh | bash)
-    completion_url="https://raw.githubusercontent.com/$OWNER/main/$COMPLETIONS_DIR/typst.bash"
-    info "Downloading $shell_name completions from $completion_url"
-
     if [[ "$shell_name" == "zsh" ]]; then
+        completion_url="https://raw.githubusercontent.com/$OWNER/main/$COMPLETIONS_DIR/typst.zsh"
+        info "Downloading zsh completions from $completion_url"
         # Zsh
         # fpath is an array of directories to search for completion functions
         # We'll try to install to the first user-writable directory in fpath
@@ -242,6 +241,8 @@ zsh | bash)
         info "You may need to restart your shell for completions to take effect."
     else
         # Bash
+        completion_url="https://raw.githubusercontent.com/$OWNER/main/$COMPLETIONS_DIR/typst.bash"
+        info "Downloading bash completions from $completion_url"
         # bash-completion checks directories in a specific order.
         # We'll try a few common locations, falling back to a user-local one.
         completions_dir=""
