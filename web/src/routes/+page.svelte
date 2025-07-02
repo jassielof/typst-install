@@ -13,7 +13,7 @@
   let copiedCommand: string | null = null;
 
   onMount(() => {
-    if (navigator.platform.toLowerCase().includes('win')) {
+    if (navigator.userAgent.includes('Win')) {
       os = 'windows';
     }
   });
