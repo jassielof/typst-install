@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: shellcheck install.sh
+      - run: shellcheck scripts/install.sh
   install-sh:
     needs: shellcheck
     strategy:
@@ -40,17 +40,17 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
-      - run: bash install.sh
+      - run: bash scripts/install.sh
       - run: echo "$HOME/.typst/bin" >> "$GITHUB_PATH"
       - run: typst --version
-      - run: typst compile test.typ
+      - run: typst compile scripts/test/test.typ
   install-ps1:
     needs: shellcheck
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - run: |
-          ./install.ps1
+          pwsh scripts/install.ps1
           echo "$HOME\.typst\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - run: typst --version
-      - run: typst compile test.typ
+      - run: typst compile scripts/test/test.typ
