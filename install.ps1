@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 
 # --- Configuration ---
 # You can override these variables, e.g. `OWNER=foo/bar ./install.ps1`
-$Owner = $env:OWNER -or 'jassielof/typst-install'
+$Owner = if ($env:OWNER -and $env:OWNER.ToLower() -ne 'true') { $env:OWNER } else { 'jassielof/typst-install' }
 $TypstRepo = 'typst/typst'
 $CompletionsDir = 'completions'
 
@@ -12,7 +12,7 @@ $CompletionsDir = 'completions'
 $Version = if ($Args.Length -ge 1) { $Args[0] } else { 'latest' }
 
 # --- Environment Setup ---
-$TypstInstall = $env:TYPST_INSTALL -or (Join-Path $HOME '.typst')
+$TypstInstall = if ($env:TYPST_INSTALL -and $env:TYPST_INSTALL.ToLower() -ne 'true') { $env:TYPST_INSTALL } else { (Join-Path $HOME '.typst') }
 $BinDir = Join-Path $TypstInstall 'bin'
 $Exe = Join-Path $BinDir 'typst.exe'
 
