@@ -1,19 +1,27 @@
 = Typst Installer
 :toc:
-:posix-script: curl -fsSL https://jassielof.github.io/typst-install/install.sh | bash
-:dos-script: irm https://jassielof.github.io/typst-install/install.ps1 | iex
+:page-url: https://jassielof.github.io/typst-install
+:posix-script: curl -fsSL {page-url}/install.sh | bash
+:dos-script: irm {page-url}/install.ps1 | iex
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
 
 Installer script for Typst.
 
 == Usage
 
-.Linux, macOS, WSL (Bash)
+.Linux, macOS, WSL
 [source, sh, subs="attributes"]
 ----
 {posix-script}
 ----
 
-.Windows (PowerShell)
+.Windows
 [source, powershell, subs="attributes"]
 ----
 {dos-script}
@@ -21,37 +29,34 @@ Installer script for Typst.
 
 == Options
 
-=== Installation Locatio
+=== Installation Location
 
-Linux, macOS, WSL:
+.Linux, macOS, WSL
 [source,sh, subs="attributes"]
 ----
 export TYPST_INSTALL="/usr/local"
-curl -fsSL https://typst.community/typst-install/install.sh | sh
+{posix-script}
 ----
 
-Windows:
-
+.Windows
 [source,ps1]
 ----
 $Env:TYPST_INSTALL = "C:\Program Files\typst"
-irm https://typst.community/typst-install/install.ps1 | iex
+{dos-script}
 ----
 
 === Installation of Specific Version
 
-Linux, macOS, WSL:
-
+.Linux, macOS, WSL
 [source,sh]
 ----
-curl -fsSL https://jassielof.github.io/typst-install/install.sh | sh -s 0.10.0
+{posix-script} -s 0.13.1
 ----
 
-Windows:
-
+.Windows
 [source,ps1]
 ----
-v="0.10.0"; irm https://jassielof.github.io/typst-install/install.ps1 | iex
+v="0.10.0"; {dos-script}
 ----
 
 == Disclaimer
