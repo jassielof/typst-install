@@ -45,7 +45,7 @@ _typst() {
 
     # Main completion logic
     if [[ "$cword" -eq 1 ]]; then
-        COMPREPLY=($(compgen -W "$commands $alias_c $alias_w" -- "$cur"))
+        mapfile -t COMPREPLY < <(compgen -W "$commands $alias_c $alias_w" -- "$cur")
         return
     fi
 
@@ -53,40 +53,40 @@ _typst() {
     case "$command" in
         compile|c)
             if [[ "$cur" == -* ]]; then
-                COMPREPLY=($(compgen -W "$global_opts $compile_watch_query_opts $compile_watch_opts" -- "$cur"))
+                mapfile -t COMPREPLY < <(compgen -W "$global_opts $compile_watch_query_opts $compile_watch_opts" -- "$cur")
             else
                 _filedir 'typ'
             fi
             ;;
         watch|w)
             if [[ "$cur" == -* ]]; then
-                COMPREPLY=($(compgen -W "$global_opts $compile_watch_query_opts $compile_watch_opts $watch_opts" -- "$cur"))
+                mapfile -t COMPREPLY < <(compgen -W "$global_opts $compile_watch_query_opts $compile_watch_opts $watch_opts" -- "$cur")
             else
                 _filedir 'typ'
             fi
             ;;
         init)
             if [[ "$cur" == -* ]]; then
-                COMPREPLY=($(compgen -W "$global_opts $init_opts" -- "$cur"))
+                mapfile -t COMPREPLY < <(compgen -W "$global_opts $init_opts" -- "$cur")
             else
                 _filedir -d # complete directories
             fi
             ;;
         query)
             if [[ "$cur" == -* ]]; then
-                COMPREPLY=($(compgen -W "$global_opts $compile_watch_query_opts $query_opts" -- "$cur"))
+                mapfile -t COMPREPLY < <(compgen -W "$global_opts $compile_watch_query_opts $query_opts" -- "$cur")
             else
                 _filedir 'typ'
             fi
             ;;
         fonts|update|help)
             if [[ "$cur" == -* ]]; then
-                COMPREPLY=($(compgen -W "$global_opts" -- "$cur"))
+                mapfile -t COMPREPLY < <(compgen -W "$global_opts" -- "$cur")
             fi
             ;;
         *) # No command yet, or unknown command
             if [[ "$cur" == -* ]]; then
-                COMPREPLY=($(compgen -W "$global_opts" -- "$cur"))
+                mapfile -t COMPREPLY < <(compgen -W "$global_opts" -- "$cur")
             fi
             ;;
     esac
@@ -94,19 +94,19 @@ _typst() {
     # Handle completions for option arguments
     case "$prev" in
         --color)
-            COMPREPLY=($(compgen -W "auto always never" -- "$cur"))
+            mapfile -t COMPREPLY < <(compgen -W "auto always never" -- "$cur")
             ;;
         --format|-f)
-            COMPREPLY=($(compgen -W "pdf png svg html" -- "$cur"))
+            mapfile -t COMPREPLY < <(compgen -W "pdf png svg html" -- "$cur")
             ;;
         --pdf-standard)
-            COMPREPLY=($(compgen -W "1.7 a-2b a-3b" -- "$cur"))
+            mapfile -t COMPREPLY < <(compgen -W "1.7 a-2b a-3b" -- "$cur")
             ;;
         --diagnostic-format)
-            COMPREPLY=($(compgen -W "human short" -- "$cur"))
+            mapfile -t COMPREPLY < <(compgen -W "human short" -- "$cur")
             ;;
         --features)
-            COMPREPLY=($(compgen -W "html" -- "$cur"))
+            mapfile -t COMPREPLY < <(compgen -W "html" -- "$cur")
             ;;
         --root|--font-path|--package-path|--package-cache-path|--make-deps|--timings|--cert)
             _filedir
