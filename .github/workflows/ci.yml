@@ -9,7 +9,7 @@ on:
       - .gitattributes
       - .gitignore
       - .github/**
-      - "!.github/workflows/test.yml"
+      - "!.github/workflows/ci.yml"
   pull_request:
     paths-ignore:
       - README.md
@@ -17,7 +17,7 @@ on:
       - .gitattributes
       - .gitignore
       - .github/**
-      - "!.github/workflows/test.yml"
+      - "!.github/workflows/ci.yml"
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -29,6 +29,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: shellcheck install.sh
   install-sh:
+    needs: shellcheck
     strategy:
       fail-fast: false
       matrix:
@@ -39,16 +40,17 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
-      - run: ./install.sh
+      - run: bash install.sh
       - run: echo "$HOME/.typst/bin" >> "$GITHUB_PATH"
       - run: typst --version
       - run: typst compile test.typ
   install-ps1:
+    needs: shellcheck
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - run: |
           ./install.ps1
-          echo "$HOME\.typst\typst-x86_64-pc-windows-msvc" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "$HOME\.typst\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - run: typst --version
       - run: typst compile test.typ
