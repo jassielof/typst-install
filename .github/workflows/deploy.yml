@@ -24,7 +24,9 @@ jobs:
         working-directory: web
         env:
           BASE_PATH: "/${{ github.event.repository.name }}"
-        run: bun run build
+        run: |
+          cp -r ../scripts/* static/
+          bun run build
 
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3
