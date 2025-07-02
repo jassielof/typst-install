@@ -56,7 +56,7 @@ $Env:TYPST_INSTALL = "C:\Program Files\typst"
 .Windows
 [source, ps1, subs="attributes"]
 ----
-v="0.10.0"; {dos-script}
+$v="0.10.0"; {dos-script}
 ----
 
 == Disclaimer
