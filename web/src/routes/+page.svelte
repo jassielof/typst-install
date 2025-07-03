@@ -95,7 +95,7 @@
       <p>
         Need help? Visit the
         <a href={REPO_URL} target="_blank" rel="noopener noreferrer" class="link">
-          Typst GitHub repository
+          GitHub repository and file an issue.
         </a>.
       </p>
       <p class="mt-2 text-sm">This is an unofficial installer.</p>
