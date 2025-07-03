@@ -28,76 +28,78 @@
 </script>
 
 <div class="hero bg-base-200 min-h-screen">
-  <div class="hero-content max-w-md flex-col text-center">
-    <h1 class="text-5xl font-bold md:text-7xl">Typst</h1>
-    <p class="text-base-content/70 py-6 text-lg md:text-xl">
-      The installer for the modern, scriptable typesetting system.
-    </p>
-
-    <div class="tabs tabs-box justify-center">
-      <input
-        type="radio"
-        name="os_tabs"
-        class="tab"
-        aria-label="macOS / Linux"
-        checked={os === 'posix'}
-        onchange={() => (os = 'posix')}
-      />
-      <div class="tab-content mt-4 w-full">
-        <div class="relative">
-          <div class="mockup-code text-left">
-            <pre data-prefix="$"><code>{POSIX_COMMAND}</code></pre>
-          </div>
-          <button
-            class="btn btn-ghost btn-sm absolute right-1 top-1"
-            onclick={() => copyCommand(POSIX_COMMAND)}
-            aria-label="Copy POSIX command"
-          >
-            {#if copiedCommand === POSIX_COMMAND}
-              <Check class="h-4 w-4" />
-            {:else}
-              <Copy class="h-4 w-4" />
-            {/if}
-          </button>
-        </div>
-      </div>
-
-      <input
-        type="radio"
-        name="os_tabs"
-        class="tab"
-        aria-label="Windows"
-        checked={os === 'windows'}
-        onchange={() => (os = 'windows')}
-      />
-      <div class="tab-content mt-4 w-full">
-        <div class="relative">
-          <div class="mockup-code text-left">
-            <pre data-prefix=">"><code>{WINDOWS_COMMAND}</code></pre>
-          </div>
-          <button
-            class="btn btn-ghost btn-sm absolute right-1 top-1"
-            onclick={() => copyCommand(WINDOWS_COMMAND)}
-            aria-label="Copy Windows command"
-          >
-            {#if copiedCommand === WINDOWS_COMMAND}
-              <Check class="h-4 w-4" />
-            {:else}
-              <Copy class="h-4 w-4" />
-            {/if}
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="text-base-content/50 mt-8">
-      <p>
-        Need help? Visit the
-        <a href={REPO_URL} target="_blank" rel="noopener noreferrer" class="link">
-          Typst GitHub repository
-        </a>.
+  <div class="hero-content text-center">
+    <div class="max-w-md">
+      <h1 class="text-5xl font-bold md:text-7xl">Typst</h1>
+      <p class="text-base-content/70 py-6 text-lg md:text-xl">
+        The installer for the modern, scriptable typesetting system.
       </p>
-      <p class="mt-2 text-sm">This is an unofficial installer.</p>
+
+      <div class="tabs tabs-box justify-center">
+        <input
+          type="radio"
+          name="os_tabs"
+          class="tab"
+          aria-label="macOS / Linux"
+          checked={os === 'posix'}
+          onchange={() => (os = 'posix')}
+        />
+        <div class="tab-content mt-4 w-full">
+          <div class="relative">
+            <div class="mockup-code text-left">
+              <pre data-prefix="$"><code>{POSIX_COMMAND}</code></pre>
+            </div>
+            <button
+              class="btn btn-ghost btn-sm absolute right-1 top-1"
+              onclick={() => copyCommand(POSIX_COMMAND)}
+              aria-label="Copy POSIX command"
+            >
+              {#if copiedCommand === POSIX_COMMAND}
+                <Check class="h-4 w-4" />
+              {:else}
+                <Copy class="h-4 w-4" />
+              {/if}
+            </button>
+          </div>
+        </div>
+
+        <input
+          type="radio"
+          name="os_tabs"
+          class="tab"
+          aria-label="Windows"
+          checked={os === 'windows'}
+          onchange={() => (os = 'windows')}
+        />
+        <div class="tab-content mt-4 w-full">
+          <div class="relative">
+            <div class="mockup-code text-left">
+              <pre data-prefix=">"><code>{WINDOWS_COMMAND}</code></pre>
+            </div>
+            <button
+              class="btn btn-ghost btn-sm absolute right-1 top-1"
+              onclick={() => copyCommand(WINDOWS_COMMAND)}
+              aria-label="Copy Windows command"
+            >
+              {#if copiedCommand === WINDOWS_COMMAND}
+                <Check class="h-4 w-4" />
+              {:else}
+                <Copy class="h-4 w-4" />
+              {/if}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-base-content/50 mt-8">
+        <p>
+          Need help? Visit the
+          <a href={REPO_URL} target="_blank" rel="noopener noreferrer" class="link">
+            Typst GitHub repository
+          </a>.
+        </p>
+        <p class="mt-2 text-sm">This is an unofficial installer.</p>
+      </div>
     </div>
   </div>
 </div>
