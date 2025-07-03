@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { effect } from 'svelte';
   import { Copy, Check } from 'lucide-svelte';
 
   const REPO_URL = 'https://github.com/jassielof/typst-install';
@@ -9,12 +8,10 @@
   const POSIX_COMMAND = `curl -fsSL ${POSIX_URL} | bash`;
   const WINDOWS_COMMAND = `irm ${WINDOWS_URL} | iex`;
 
-  // Use $state for reactive state
   let os = $state<'posix' | 'windows'>('posix');
   let copiedCommand = $state<string | null>(null);
 
-  // Replace onMount with $effect
-  effect(() => {
+  $effect(() => {
     if (navigator.userAgent.includes('Win')) {
       os = 'windows';
     }
@@ -44,7 +41,7 @@
         class="tab"
         aria-label="macOS / Linux"
         checked={os === 'posix'}
-        on:change={() => (os = 'posix')}
+        onchange={() => (os = 'posix')}
       />
       <div class="tab-content mt-4 w-full">
         <div class="relative">
@@ -53,7 +50,7 @@
           </div>
           <button
             class="btn btn-ghost btn-sm absolute right-1 top-1"
-            on:click={() => copyCommand(POSIX_COMMAND)}
+            onclick={() => copyCommand(POSIX_COMMAND)}
             aria-label="Copy POSIX command"
           >
             {#if copiedCommand === POSIX_COMMAND}
@@ -71,7 +68,7 @@
         class="tab"
         aria-label="Windows"
         checked={os === 'windows'}
-        on:change={() => (os = 'windows')}
+        onchange={() => (os = 'windows')}
       />
       <div class="tab-content mt-4 w-full">
         <div class="relative">
@@ -80,7 +77,7 @@
           </div>
           <button
             class="btn btn-ghost btn-sm absolute right-1 top-1"
-            on:click={() => copyCommand(WINDOWS_COMMAND)}
+            onclick={() => copyCommand(WINDOWS_COMMAND)}
             aria-label="Copy Windows command"
           >
             {#if copiedCommand === WINDOWS_COMMAND}
