@@ -11,6 +11,8 @@ ifdef::env-github[]
 :warning-caption: :warning:
 endif::[]
 
+// TODO: If my completions PR is merged, update the install scripts to use `typst completions` instead of manually generating the completions.
+
 Installer script for Typst.
 
 == Usage
