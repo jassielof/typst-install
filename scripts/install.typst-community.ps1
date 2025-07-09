@@ -45,25 +45,31 @@ if (!(Test-Path $BinDir)) {
 }
 
 $ArchivePath = Join-Path $TypstInstall $File
-Invoke-WebRequest -Uri $URL -OutFile $ArchivePath
+# In older PowerShell, -UseBasicParsing can be faster and more reliable in CI.
+# It also avoids printing the progress bar which can clutter logs.
+Invoke-WebRequest -Uri $URL -OutFile $ArchivePath -UseBasicParsing
 
 Write-Output "Extracting archive..."
 if (Is-Pwsh7) {
-    Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall -Force
+    # CORRECTED: Added Out-Null
+    Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall -Force | Out-Null
 } else {
     # PowerShell 5.1: no -Force, so remove folder if exists
     $ExtractedFolder = Join-Path $TypstInstall $Folder
     if (Test-Path $ExtractedFolder) {
-        Remove-Item $ExtractedFolder -Recurse -Force
+        Remove-Item $ExtractedFolder -Recurse -Force | Out-Null
     }
-    Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall
+    # CORRECTED: Added Out-Null
+    Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall | Out-Null
 }
 Remove-Item $ArchivePath
 
 # --- File Organization ---
 $TypstExeSource = Join-Path $TypstInstall $Folder 'typst.exe'
-Move-Item -Path $TypstExeSource -Destination $Exe -Force
-Remove-Item (Join-Path $TypstInstall $Folder) -Recurse -Force
+# CORRECTED: Added Out-Null
+Move-Item -Path $TypstExeSource -Destination $Exe -Force | Out-Null
+# CORRECTED: Added Out-Null
+Remove-Item (Join-Path $TypstInstall $Folder) -Recurse -Force | Out-Null
 
 # --- PATH Configuration ---
 Write-Output "Adding Typst to PATH..."
@@ -89,7 +95,7 @@ try {
     $CompletionFile = Join-Path $TypstInstall 'typst.ps1'
 
     Write-Output "Downloading completions from $CompletionUrl"
-    Invoke-WebRequest -Uri $CompletionUrl -OutFile $CompletionFile
+    Invoke-WebRequest -Uri $CompletionUrl -OutFile $CompletionFile -UseBasicParsing
 
     # $PROFILE may not exist in 5.1, so check and create if needed
     if (!(Test-Path $PROFILE)) {
@@ -116,3 +122,4 @@ try {
 Write-Output "Typst was installed successfully to $Exe"
 Write-Output "Run 'typst --help' to get started."
 Write-Output "Stuck? Open an Issue at https://github.com/$Owner/issues"
+Write-Output "Check: This is the gemini solution 5:28pm"
