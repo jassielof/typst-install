@@ -38,10 +38,10 @@ $URL = if ($Version -eq 'latest') {
 # --- Installation ---
 Write-Output "Downloading Typst from $URL"
 if (!(Test-Path $TypstInstall)) {
-  New-Item $TypstInstall -ItemType Directory -Force | Out-Null
+  New-Item $TypstInstall -ItemType Directory -Force > $null
 }
 if (!(Test-Path $BinDir)) {
-  New-Item $BinDir -ItemType Directory -Force | Out-Null
+  New-Item $BinDir -ItemType Directory -Force > $null
 }
 
 $ArchivePath = Join-Path $TypstInstall $File
@@ -49,32 +49,33 @@ Invoke-WebRequest -Uri $URL -OutFile $ArchivePath
 
 Write-Output "Extracting archive..."
 if (Is-Pwsh7) {
-    Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall -Force | Out-Null
+    Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall -Force > $null
 } else {
     # PowerShell 5.1: no -Force, so remove folder if exists
     $ExtractedFolder = Join-Path $TypstInstall $Folder
     if (Test-Path $ExtractedFolder) {
-        Remove-Item $ExtractedFolder -Recurse -Force | Out-Null
+        Remove-Item $ExtractedFolder -Recurse -Force > $null
     }
-    Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall | Out-Null
+    Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall > $null
 }
-Remove-Item $ArchivePath | Out-Null
+Remove-Item $ArchivePath > $null
 
 # --- File Organization ---
 $TypstExeSource = Join-Path $TypstInstall $Folder 'typst.exe'
 
 # Handle Move-Item compatibility between PowerShell versions
 if (Is-Pwsh7) {
-    Move-Item -Path $TypstExeSource -Destination $Exe -Force | Out-Null
+    Move-Item -Path $TypstExeSource -Destination $Exe -Force
 } else {
     # PowerShell 5.1: Remove destination if exists, then move
     if (Test-Path $Exe) {
-        Remove-Item $Exe -Force | Out-Null
+        Remove-Item $Exe -Force
     }
-    Move-Item -Path $TypstExeSource -Destination $Exe | Out-Null
+    Move-Item -Path $TypstExeSource -Destination $Exe
 }
 
-Remove-Item (Join-Path $TypstInstall $Folder) -Recurse -Force | Out-Null
+$FolderToRemove = Join-Path $TypstInstall $Folder
+Remove-Item $FolderToRemove -Recurse -Force
 
 # --- PATH Configuration ---
 Write-Output "Adding Typst to PATH..."
@@ -106,9 +107,9 @@ try {
     if (!(Test-Path $PROFILE)) {
         $ProfileDir = Split-Path $PROFILE
         if (!(Test-Path $ProfileDir)) {
-            New-Item -Path $ProfileDir -ItemType Directory -Force | Out-Null
+            New-Item -Path $ProfileDir -ItemType Directory -Force > $null
         }
-        New-Item -Path $PROFILE -ItemType File -Force | Out-Null
+        New-Item -Path $PROFILE -ItemType File -Force > $null
     }
 
     $SourceCommand = ". `"$CompletionFile`""

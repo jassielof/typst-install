@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Typst via script
         run: |
-          curl -fsSL https://jassielof.github.io/typst-install/install.sh | bash
+          cat scripts/install.sh | bash
       - run: echo "$HOME/.typst/bin" >> "$GITHUB_PATH"
       - run: typst --version
       - run: typst compile scripts/test/test.typ
@@ -42,7 +42,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Typst via script
         run: |
-          irm https://jassielof.github.io/typst-install/install.ps1 | iex
+          gc scripts/install.ps1 | iex
           echo "$HOME\.typst\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - run: typst --version
       - run: typst compile scripts/test/test.typ
@@ -54,7 +54,7 @@ jobs:
       - name: Install Typst via script (PowerShell 5.1)
         shell: powershell
         run: |
-          iwr https://jassielof.github.io/typst-install/install.ps1 | iex
+          gc scripts/install.ps1 | iex
           "$HOME\.typst\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Check typst version
         shell: powershell
