@@ -2,6 +2,10 @@
 # Keep this script simple and easily auditable!
 $ErrorActionPreference = 'Stop'
 
+# --- Version Compatibility ---
+$PSMajor = $PSVersionTable.PSVersion.Major
+function Is-Pwsh7 { return $PSMajor -ge 7 }
+
 # --- Configuration ---
 # You can override these variables, e.g. `OWNER=foo/bar ./install.ps1`
 $Owner = if ($env:OWNER -and $env:OWNER.ToLower() -ne 'true') { $env:OWNER } else { 'jassielof/typst-install' }
@@ -13,7 +17,8 @@ $BaseUrl = 'https://jassielof.github.io/typst-install'
 $Version = if ($Args.Length -ge 1) { $Args[0] } else { 'latest' }
 
 # --- Environment Setup ---
-$TypstInstall = if ($env:TYPST_INSTALL -and $env:TYPST_INSTALL.ToLower() -ne 'true') { $env:TYPST_INSTALL } else { (Join-Path $HOME '.typst') }
+$HomeDir = if ($env:HOME) { $env:HOME } else { $env:USERPROFILE }
+$TypstInstall = if ($env:TYPST_INSTALL -and $env:TYPST_INSTALL.ToLower() -ne 'true') { $env:TYPST_INSTALL } else { Join-Path $HomeDir '.typst' }
 $BinDir = Join-Path $TypstInstall 'bin'
 $Exe = Join-Path $BinDir 'typst.exe'
 
@@ -43,13 +48,22 @@ $ArchivePath = Join-Path $TypstInstall $File
 Invoke-WebRequest -Uri $URL -OutFile $ArchivePath
 
 Write-Output "Extracting archive..."
-Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall -Force
+if (Is-Pwsh7) {
+    Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall -Force
+} else {
+    # PowerShell 5.1: no -Force, so remove folder if exists
+    $ExtractedFolder = Join-Path $TypstInstall $Folder
+    if (Test-Path $ExtractedFolder) {
+        Remove-Item $ExtractedFolder -Recurse -Force
+    }
+    Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall
+}
 Remove-Item $ArchivePath
 
 # --- File Organization ---
-Move-Item -Path (Join-Path $TypstInstall $Folder 'typst.exe') -Destination $Exe -Force
-# Clean up the now-empty extracted folder
-Remove-Item (Join-Path $TypstInstall $Folder) -Recurse
+$TypstExeSource = Join-Path $TypstInstall $Folder 'typst.exe'
+Move-Item -Path $TypstExeSource -Destination $Exe -Force
+Remove-Item (Join-Path $TypstInstall $Folder) -Recurse -Force
 
 # --- PATH Configuration ---
 Write-Output "Adding Typst to PATH..."
@@ -77,7 +91,12 @@ try {
     Write-Output "Downloading completions from $CompletionUrl"
     Invoke-WebRequest -Uri $CompletionUrl -OutFile $CompletionFile
 
+    # $PROFILE may not exist in 5.1, so check and create if needed
     if (!(Test-Path $PROFILE)) {
+        $ProfileDir = Split-Path $PROFILE
+        if (!(Test-Path $ProfileDir)) {
+            New-Item -Path $ProfileDir -ItemType Directory -Force | Out-Null
+        }
         New-Item -Path $PROFILE -ItemType File -Force | Out-Null
     }
 
