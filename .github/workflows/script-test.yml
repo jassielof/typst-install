@@ -46,3 +46,19 @@ jobs:
           echo "$HOME\.typst\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - run: typst --version
       - run: typst compile scripts/test/test.typ
+
+  Windows-PowerShell5:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Typst via script (PowerShell 5.1)
+        shell: powershell
+        run: |
+          iwr https://jassielof.github.io/typst-install/install.ps1 | iex
+          "$HOME\.typst\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Check typst version
+        shell: powershell
+        run: typst --version
+      - name: Compile test.typ
+        shell: powershell
+        run: typst compile scripts/test/test.typ
