@@ -36,6 +36,7 @@ $URL = if ($Version -eq 'latest') {
 }
 
 # --- Installation ---
+Write-Output "Gemini 5:50pm"
 Write-Output "Downloading Typst from $URL"
 if (!(Test-Path $TypstInstall)) {
   New-Item $TypstInstall -ItemType Directory -Force | Out-Null
