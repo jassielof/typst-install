@@ -1,10 +1,9 @@
 name: Test Typst Install Script
 
 on:
-  workflow_run:
-    workflows: ["Deploy to GitHub Pages"]
-    types:
-      - completed
+  push:
+    branches: [main]
+  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
