@@ -62,7 +62,18 @@ Remove-Item $ArchivePath | Out-Null
 
 # --- File Organization ---
 $TypstExeSource = Join-Path $TypstInstall $Folder 'typst.exe'
-Move-Item -Path $TypstExeSource -Destination $Exe -Force | Out-Null
+
+# Handle Move-Item compatibility between PowerShell versions
+if (Is-Pwsh7) {
+    Move-Item -Path $TypstExeSource -Destination $Exe -Force | Out-Null
+} else {
+    # PowerShell 5.1: Remove destination if exists, then move
+    if (Test-Path $Exe) {
+        Remove-Item $Exe -Force | Out-Null
+    }
+    Move-Item -Path $TypstExeSource -Destination $Exe | Out-Null
+}
+
 Remove-Item (Join-Path $TypstInstall $Folder) -Recurse -Force | Out-Null
 
 # --- PATH Configuration ---
