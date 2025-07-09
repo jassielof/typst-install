@@ -23,7 +23,6 @@ $BinDir = Join-Path $TypstInstall 'bin'
 $Exe = Join-Path $BinDir 'typst.exe'
 
 # --- Target Detection ---
-# Currently, only x86_64-pc-windows-msvc is supported for Windows.
 $Target = 'x86_64-pc-windows-msvc'
 $Folder = "typst-${Target}"
 $File = "$Folder.zip"
@@ -36,54 +35,53 @@ $URL = if ($Version -eq 'latest') {
 }
 
 # --- Installation ---
+Write-Output "gemini v2"
 Write-Output "Downloading Typst from $URL"
 if (!(Test-Path $TypstInstall)) {
-  New-Item $TypstInstall -ItemType Directory -Force | Out-Null
+  # CORRECTED: Assign output to $null
+  $null = New-Item $TypstInstall -ItemType Directory -Force
 }
 if (!(Test-Path $BinDir)) {
-  New-Item $BinDir -ItemType Directory -Force | Out-Null
+  # CORRECTED: Assign output to $null
+  $null = New-Item $BinDir -ItemType Directory -Force
 }
 
 $ArchivePath = Join-Path $TypstInstall $File
-# In older PowerShell, -UseBasicParsing can be faster and more reliable in CI.
-# It also avoids printing the progress bar which can clutter logs.
+# Using -UseBasicParsing is a good practice for compatibility and performance in scripts.
 Invoke-WebRequest -Uri $URL -OutFile $ArchivePath -UseBasicParsing
 
 Write-Output "Extracting archive..."
 if (Is-Pwsh7) {
-    # CORRECTED: Added Out-Null
-    Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall -Force | Out-Null
+    # CORRECTED: Assign output to $null
+    $null = Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall -Force
 } else {
-    # PowerShell 5.1: no -Force, so remove folder if exists
     $ExtractedFolder = Join-Path $TypstInstall $Folder
     if (Test-Path $ExtractedFolder) {
-        Remove-Item $ExtractedFolder -Recurse -Force | Out-Null
+        $null = Remove-Item $ExtractedFolder -Recurse -Force
     }
-    # CORRECTED: Added Out-Null
-    Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall | Out-Null
+    # CORRECTED: Assign output to $null
+    $null = Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall
 }
 Remove-Item $ArchivePath
 
 # --- File Organization ---
 $TypstExeSource = Join-Path $TypstInstall $Folder 'typst.exe'
-# CORRECTED: Added Out-Null
-Move-Item -Path $TypstExeSource -Destination $Exe -Force | Out-Null
-# CORRECTED: Added Out-Null
-Remove-Item (Join-Path $TypstInstall $Folder) -Recurse -Force | Out-Null
+# CORRECTED: This is the most critical fix. Assign Move-Item output to $null
+$null = Move-Item -Path $TypstExeSource -Destination $Exe -Force
+$null = Remove-Item (Join-Path $TypstInstall $Folder) -Recurse -Force
 
 # --- PATH Configuration ---
 Write-Output "Adding Typst to PATH..."
 # For current session
 $env:Path = "$BinDir;$env:Path"
 
-# For future sessions (User environment variable)
+# For future sessions
 $UserPath = [System.Environment]::GetEnvironmentVariable('Path', 'User')
 if (!(";${UserPath};".ToLower().Contains(";$BinDir;".ToLower()))) {
   $NewPath = if ($UserPath) { "${UserPath};$BinDir" } else { $BinDir }
   [System.Environment]::SetEnvironmentVariable('Path', $NewPath, 'User')
 }
 
-# For GitHub Actions
 if ($env:GITHUB_PATH) {
   Add-Content -Path $env:GITHUB_PATH -Value $BinDir
 }
@@ -97,13 +95,12 @@ try {
     Write-Output "Downloading completions from $CompletionUrl"
     Invoke-WebRequest -Uri $CompletionUrl -OutFile $CompletionFile -UseBasicParsing
 
-    # $PROFILE may not exist in 5.1, so check and create if needed
     if (!(Test-Path $PROFILE)) {
         $ProfileDir = Split-Path $PROFILE
         if (!(Test-Path $ProfileDir)) {
-            New-Item -Path $ProfileDir -ItemType Directory -Force | Out-Null
+            $null = New-Item -Path $ProfileDir -ItemType Directory -Force
         }
-        New-Item -Path $PROFILE -ItemType File -Force | Out-Null
+        $null = New-Item -Path $PROFILE -ItemType File -Force
     }
 
     $SourceCommand = ". `"$CompletionFile`""
@@ -122,4 +119,3 @@ try {
 Write-Output "Typst was installed successfully to $Exe"
 Write-Output "Run 'typst --help' to get started."
 Write-Output "Stuck? Open an Issue at https://github.com/$Owner/issues"
-Write-Output "Check: This is the gemini solution 5:28pm"
