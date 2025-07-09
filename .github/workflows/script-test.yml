@@ -1,9 +1,10 @@
 name: Test Typst Install Script
 
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_run:
+    workflows: ["Deploy to GitHub Pages"]
+    types:
+      - completed
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -30,7 +31,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Typst via script
         run: |
-          cat scripts/install.sh | bash
+          curl -fsSL https://jassielof.github.io/typst-install/install.sh | bash
       - run: echo "$HOME/.typst/bin" >> "$GITHUB_PATH"
       - run: typst --version
       - run: typst compile scripts/test/test.typ
@@ -41,7 +42,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Typst via script
         run: |
-          gc scripts/install.ps1 | iex
+          irm https://jassielof.github.io/typst-install/install.ps1 | iex
           echo "$HOME\.typst\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - run: typst --version
       - run: typst compile scripts/test/test.typ
@@ -53,7 +54,7 @@ jobs:
       - name: Install Typst via script (PowerShell 5.1)
         shell: powershell
         run: |
-          gc scripts/install.ps1 | iex
+          irm https://jassielof.github.io/typst-install/install.ps1 | iex
           "$HOME\.typst\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Check typst version
         shell: powershell
