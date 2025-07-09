@@ -1,11 +1,10 @@
 name: Test Typst Install Script
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
+  workflow_run:
+    workflows: ["Deploy to GitHub Pages"]
+    types:
+      - completed
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -18,7 +17,6 @@ jobs:
       - run: shellcheck scripts/install.sh
 
   POSIX:
-    # No changes needed here, but keeping it for context
     needs: shellcheck
     strategy:
       fail-fast: false
@@ -31,28 +29,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Typst via script
-        # This can be changed to use the local script too for consistency!
-        run: |
-          cat ./scripts/install.sh | bash
+        run: curl -fsSL https://jassielof.github.io/typst-install/install.sh | bash
       - run: echo "$HOME/.typst/bin" >> "$GITHUB_PATH"
       - run: typst --version
       - run: typst compile scripts/test/test.typ
 
-  Windows-pwsh7: # Renamed for clarity
+  Windows-pwsh7:
     name: "Windows (pwsh 7)"
-    needs: shellcheck
     runs-on: windows-latest
     defaults:
       run:
-        shell: pwsh # Use modern PowerShell
+        shell: pwsh
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Typst via script (pwsh 7)
-        run: |
-          Get-Content ./scripts/install.ps1 -Raw | Invoke-Expression
-          # No need to add to GITHUB_PATH here, the script already does it.
-
+        run: irm https://jassielof.github.io/typst-install/install.ps1 | iex
       - name: Check typst version
         run: typst --version
 
@@ -61,19 +53,16 @@ jobs:
 
   Windows-PowerShell5:
     name: "Windows (PowerShell 5.1)"
-    needs: shellcheck
     runs-on: windows-latest
     defaults:
       run:
-        shell: powershell # Use Windows PowerShell 5.1
+        shell: powershell
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Typst via script (PowerShell 5.1)
-        run: |
-          Get-Content ./scripts/install.ps1 -Raw | Invoke-Expression
-          # No need to add to GITHUB_PATH here, the script already does it.
-
+        run: irm https://jassielof.github.io/typst-install/install.ps1 | iex
+        
       - name: Check typst version
         run: typst --version
 
