@@ -49,21 +49,21 @@ Invoke-WebRequest -Uri $URL -OutFile $ArchivePath
 
 Write-Output "Extracting archive..."
 if (Is-Pwsh7) {
-    Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall -Force
+    Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall -Force | Out-Null
 } else {
     # PowerShell 5.1: no -Force, so remove folder if exists
     $ExtractedFolder = Join-Path $TypstInstall $Folder
     if (Test-Path $ExtractedFolder) {
-        Remove-Item $ExtractedFolder -Recurse -Force
+        Remove-Item $ExtractedFolder -Recurse -Force | Out-Null
     }
-    Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall
+    Expand-Archive -Path $ArchivePath -DestinationPath $TypstInstall | Out-Null
 }
-Remove-Item $ArchivePath
+Remove-Item $ArchivePath | Out-Null
 
 # --- File Organization ---
 $TypstExeSource = Join-Path $TypstInstall $Folder 'typst.exe'
-Move-Item -Path $TypstExeSource -Destination $Exe -Force
-Remove-Item (Join-Path $TypstInstall $Folder) -Recurse -Force
+Move-Item -Path $TypstExeSource -Destination $Exe -Force | Out-Null
+Remove-Item (Join-Path $TypstInstall $Folder) -Recurse -Force | Out-Null
 
 # --- PATH Configuration ---
 Write-Output "Adding Typst to PATH..."
@@ -110,7 +110,6 @@ try {
 } catch {
     Write-Warning "Failed to install PowerShell completions: $_"
 }
-
 
 # --- Final Message ---
 Write-Output "Typst was installed successfully to $Exe"
