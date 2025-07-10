@@ -34,7 +34,7 @@
       The installer for the modern, scriptable typesetting system.
     </p>
 
-    <div role="tablist" class="tabs tabs-box justify-center">
+    <div role="tablist" class="tabs tabs-border justify-center">
       <button
         role="tab"
         class="tab"
