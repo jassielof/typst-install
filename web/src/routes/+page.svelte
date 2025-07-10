@@ -28,7 +28,7 @@
 </script>
 
 <div class="flex min-h-screen flex-col items-center justify-center bg-base-200 p-4">
-  <div class="w-full max-w-md text-center">
+  <div class="w-full max-w-md md:max-w-2xl text-center">
     <h1 class="text-5xl font-bold md:text-7xl">Typst</h1>
     <p class="text-base-content/70 py-6 text-lg md:text-xl">
       The installer for the modern, scriptable typesetting system.
