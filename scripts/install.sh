@@ -41,7 +41,6 @@ success() {
 # You can override these variables, e.g. `OWNER=foo/bar ./install.sh`
 OWNER="${OWNER:-jassielof/typst-install}"
 TYPST_REPO="typst/typst"
-COMPLETIONS_DIR="completions"
 BASE_URL="https://jassielof.github.io/typst-install"
 
 # --- Main Script ---
@@ -114,7 +113,7 @@ tildify() {
 
 success "Typst was installed successfully to ${Bold_Green}$(tildify "$exe")"
 
-# --- Shell Setup: PATH and Completions ---
+# --- Shell Setup: PATH, TYPST_ROOT, and Completions ---
 
 # Add to PATH if not already there
 if ! command -v typst >/dev/null; then
@@ -136,6 +135,7 @@ if ! command -v typst >/dev/null; then
         fi
         profile_cmd=$(cat <<EOF
 set -gx TYPST_INSTALL $install_dir_fish
+set -gx TYPST_ROOT $install_dir_fish
 set -gx PATH "\$TYPST_INSTALL/bin" \$PATH
 EOF
 )
@@ -164,6 +164,7 @@ EOF
 
         profile_cmd=$(cat <<EOF
 export TYPST_INSTALL=$quoted_install_dir
+export TYPST_ROOT=$quoted_install_dir
 export PATH="\$TYPST_INSTALL/bin:\$PATH"
 EOF
 )
@@ -177,6 +178,7 @@ EOF
         fi
         profile_cmd=$(cat <<EOF
 export TYPST_INSTALL=$quoted_install_dir
+export TYPST_ROOT=$quoted_install_dir
 export PATH="\$TYPST_INSTALL/bin:\$PATH"
 EOF
 )
@@ -203,69 +205,62 @@ EOF
     fi
 fi
 
-# Install shell completions
-info "Attempting to install shell completions..."
+# Install shell completions using typst completions command
+info "Setting up shell completions..."
 shell_name=$(basename "$SHELL")
 case "$shell_name" in
 fish)
-    # The completions file will be downloaded from the repo
-    completion_url="$BASE_URL/$COMPLETIONS_DIR/typst.fish"
     completions_dir="$HOME/.config/fish/completions"
     mkdir -p "$completions_dir"
-    info "Downloading fish completions from $completion_url"
-    curl --fail --location --progress-bar -o "$completions_dir/typst.fish" "$completion_url" || error "Failed to download fish completions"
-    success "Fish completions installed successfully."
+    completion_file="$completions_dir/typst.fish"
+    echo "$exe completions fish | source" > "$completion_file"
+    success "Fish completions configured at $(tildify "$completion_file")"
+    info "Completions will be generated dynamically from the installed typst version."
     ;;
-zsh | bash)
-    if [[ "$shell_name" == "zsh" ]]; then
-        completion_url="$BASE_URL/$COMPLETIONS_DIR/typst.zsh"
-        info "Downloading zsh completions from $completion_url"
-        # Zsh
-        # fpath is an array of directories to search for completion functions
-        # We'll try to install to the first user-writable directory in fpath
-        completions_dir=""
-        # SC2154: fpath is a standard zsh array variable.
-        # shellcheck disable=SC2154
-        for dir in "${fpath[@]}"; do
-            if [[ -w "$dir" ]]; then
-                completions_dir="$dir"
-                break
-            fi
-        done
-        # Fallback to a common user location if no writable dir in fpath
-        if [[ -z "$completions_dir" ]]; then
-            completions_dir="$HOME/.zsh/completions"
-        fi
-        mkdir -p "$completions_dir"
-        curl --fail --location --progress-bar -o "$completions_dir/_typst" "$completion_url" || error "Failed to download zsh completions"
-        success "Zsh completions installed to $(tildify "$completions_dir/_typst")"
-        info "You may need to restart your shell for completions to take effect."
-    else
-        # Bash
-        completion_url="$BASE_URL/$COMPLETIONS_DIR/typst.bash"
-        info "Downloading bash completions from $completion_url"
-        # bash-completion checks directories in a specific order.
-        # We'll try a few common locations, falling back to a user-local one.
-        completions_dir=""
-        # Check for system-wide, user-writable directory first.
-        if [[ -d "/etc/bash_completion.d" && -w "/etc/bash_completion.d" ]]; then
-            completions_dir="/etc/bash_completion.d"
+zsh)
+    profile_path="$HOME/.zshrc"
+    completion_cmd='eval "$('$exe' completions zsh)"'
+
+    if ! grep -q "typst completions zsh" "$profile_path" 2>/dev/null; then
+        if [[ -w "$profile_path" || (! -e "$profile_path" && -w "$(dirname "$profile_path")") ]]; then
+            {
+                echo -e '\n# Typst completions'
+                echo "$completion_cmd"
+            } >>"$profile_path"
+            success "Zsh completions configured in $(tildify "$profile_path")"
+            info "Completions will be generated dynamically from the installed typst version."
         else
-            # Default to user-local directory, which is a common standard.
-            completions_dir="$HOME/.local/share/bash-completion/completions"
-        fi
-
-        mkdir -p "$completions_dir"
-        curl --fail --location --progress-bar -o "$completions_dir/typst" "$completion_url" || error "Failed to download bash completions"
-        success "Bash completions installed to $(tildify "$completions_dir/typst")"
-        info "You may need to restart your shell for completions to take effect."
-
-        # Check if bash-completion is likely not configured for the user
-        if ! grep -q "bash_completion" "$HOME/.bashrc" && [[ ! -f "/etc/bash_completion" ]]; then
             echo
-            info "To enable completions, you may need to add the following to your ~/.bashrc:"
-            info "${Bold_White}  source \"$(tildify "$completions_dir/typst")\"${Color_Off}"
+            info "Could not automatically add completions to your .zshrc"
+            info "Please add the following to $(tildify "$profile_path"):"
+            echo
+            info "${Bold_White}$completion_cmd${Color_Off}"
         fi
+    else
+        info "Zsh completions already configured."
+    fi
+    ;;
+bash)
+    profile_path="$HOME/.bashrc"
+    completion_cmd='eval "$('$exe' completions bash)"'
+
+    if ! grep -q "typst completions bash" "$profile_path" 2>/dev/null; then
+        if [[ -w "$profile_path" || (! -e "$profile_path" && -w "$(dirname "$profile_path")") ]]; then
+            {
+                echo -e '\n# Typst completions'
+                echo "$completion_cmd"
+            } >>"$profile_path"
+            success "Bash completions configured in $(tildify "$profile_path")"
+            info "Completions will be generated dynamically from the installed typst version."
+        else
+            echo
+            info "Could not automatically add completions to your .bashrc"
+            info "Please add the following to $(tildify "$profile_path"):"
+            echo
+            info "${Bold_White}$completion_cmd${Color_Off}"
+        fi
+    else
+        info "Bash completions already configured."
     fi
     ;;
 *)
