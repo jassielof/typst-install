@@ -219,7 +219,7 @@ fish)
     ;;
 zsh)
     profile_path="$HOME/.zshrc"
-    completion_cmd='eval "$('$exe' completions zsh)"'
+    completion_cmd="eval '$($exe completions zsh)'"
 
     if ! grep -q "typst completions zsh" "$profile_path" 2>/dev/null; then
         if [[ -w "$profile_path" || (! -e "$profile_path" && -w "$(dirname "$profile_path")") ]]; then
@@ -242,7 +242,7 @@ zsh)
     ;;
 bash)
     profile_path="$HOME/.bashrc"
-    completion_cmd='eval "$('$exe' completions bash)"'
+    completion_cmd="eval '$($exe completions bash)'"
 
     if ! grep -q "typst completions bash" "$profile_path" 2>/dev/null; then
         if [[ -w "$profile_path" || (! -e "$profile_path" && -w "$(dirname "$profile_path")") ]]; then
