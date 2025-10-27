@@ -2,8 +2,6 @@
 # Keep this script simple and easily auditable!
 $ErrorActionPreference = 'Stop'
 
-# The main installation logic is wrapped in a function to prevent any output
-# from leaking into the pipeline, which is critical when using `... | iex`.
 function Install-Typst {
     # --- Configuration ---
     $Owner = if ($env:OWNER -and $env:OWNER.ToLower() -ne 'true') { $env:OWNER } else { 'jassielof/typst-install' }
@@ -11,12 +9,15 @@ function Install-Typst {
     $BaseUrl = 'https://jassielof.github.io/typst-install'
 
     # --- Argument Parsing ---
-    # Access the script's original arguments from within the function
     $Version = if ($script:Args.Length -ge 1) { $script:Args[0] } else { 'latest' }
 
     # --- Environment Setup ---
     $HomeDir = if ($env:HOME) { $env:HOME } else { $env:USERPROFILE }
-    $TypstInstall = if ($env:TYPST_INSTALL -and $env:TYPST_INSTALL.ToLower() -ne 'true') { $env:TYPST_INSTALL } else { Join-Path $HomeDir '.typst' }
+    $TypstInstall = if ($env:TYPST_INSTALL -and $env:TYPST_INSTALL.ToLower() -ne 'true') {
+        $env:TYPST_INSTALL
+    } else {
+        Join-Path $HomeDir '.typst'
+    }
     $BinDir = Join-Path $TypstInstall 'bin'
     $Exe = Join-Path $BinDir 'typst.exe'
 
@@ -35,16 +36,13 @@ function Install-Typst {
     # --- Installation ---
     Write-Host "Downloading Typst v$Version from $URL"
     if (!(Test-Path $BinDir)) {
-      # Create the full path in one go
-      $null = New-Item $BinDir -ItemType Directory -Force
+        $null = New-Item $BinDir -ItemType Directory -Force
     }
 
     $ArchivePath = Join-Path $TypstInstall $File
     Invoke-WebRequest -Uri $URL -OutFile $ArchivePath -UseBasicParsing
 
     Write-Host "Extracting archive..."
-    # Use tar.exe as it's reliable on GitHub runners and avoids potential
-    # Expand-Archive output issues. Fallback to Expand-Archive for other systems.
     if (Get-Command tar.exe -ErrorAction SilentlyContinue) {
         tar.exe -xf $ArchivePath -C $TypstInstall
     } else {
@@ -55,29 +53,23 @@ function Install-Typst {
     # --- File Organization ---
     $ExtractedFolder = Join-Path $TypstInstall $Folder
     $TypstExeSource = Join-Path $ExtractedFolder 'typst.exe'
-
-    # Assigning to $null is the most reliable way to suppress cmdlet output
     $null = Move-Item -Path $TypstExeSource -Destination $Exe -Force
     $null = Remove-Item $ExtractedFolder -Recurse -Force
 
     # --- Environment Variables ---
     Write-Host "Setting TYPST_INSTALL environment variable..."
-    # For current session
     $env:TYPST_INSTALL = $TypstInstall
 
-    # For future sessions (User environment variable)
     try {
         [System.Environment]::SetEnvironmentVariable('TYPST_INSTALL', $TypstInstall, 'User')
     } catch {
-        Write-Warning "Failed to set TYPST_INSTALL environment variable permanently. You may need to do it manually."
+        Write-Warning "Failed to set TYPST_INSTALL permanently. You may need to do it manually."
     }
 
     # --- PATH Configuration ---
     Write-Host "Adding Typst to PATH..."
-    # For current session
     $env:Path = "$BinDir;$env:Path"
 
-    # For future sessions (User environment variable)
     try {
         $UserPath = [System.Environment]::GetEnvironmentVariable('Path', 'User')
         if (!(";${UserPath};".ToLower().Contains(";$BinDir;".ToLower()))) {
@@ -85,12 +77,12 @@ function Install-Typst {
             [System.Environment]::SetEnvironmentVariable('Path', $NewPath, 'User')
         }
     } catch {
-        Write-Warning "Failed to add Typst to the permanent user PATH. You may need to do it manually."
+        Write-Warning "Failed to add Typst to permanent PATH. You may need to do it manually."
     }
 
-    # For subsequent GitHub Actions steps
+    # For GitHub Actions
     if ($env:GITHUB_PATH) {
-      Add-Content -Path $env:GITHUB_PATH -Value $BinDir
+        Add-Content -Path $env:GITHUB_PATH -Value $BinDir
     }
 
     # --- Shell Completions ---
@@ -103,7 +95,7 @@ function Install-Typst {
         $CompletionCommand = '(& typst completions powershell) | Out-String | Invoke-Expression'
         if (!(Select-String -Path $PROFILE -Pattern ([regex]::Escape($CompletionCommand)) -Quiet)) {
             Add-Content -Path $PROFILE -Value "`n# Typst Completions`n$CompletionCommand"
-            Write-Host "Completions enabled for future sessions. Please restart your shell or run '. `$PROFILE`'."
+            Write-Host "Completions will be enabled in new PowerShell sessions."
         } else {
             Write-Host "Completions are already configured."
         }
@@ -111,12 +103,21 @@ function Install-Typst {
         Write-Warning "Failed to install PowerShell completions: $_"
     }
 
+    # --- Test Installation ---
+    Write-Host ""
+    if (Get-Command typst -ErrorAction SilentlyContinue) {
+        Write-Host "Installation verified! Running 'typst --version'..." -ForegroundColor Green
+        & $Exe --version
+    } else {
+        Write-Host "Installation complete! Restart your shell to use Typst." -ForegroundColor Green
+    }
+
     # --- Final Message ---
+    Write-Host ""
     Write-Host "Typst was installed successfully to '$Exe'" -ForegroundColor Green
     Write-Host "Run 'typst --help' to get started."
     Write-Host "Stuck? Open an Issue at https://github.com/$Owner/issues"
 }
 
 # --- Main Execution ---
-# Call the main function to run the installer.
 Install-Typst

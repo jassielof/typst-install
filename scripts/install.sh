@@ -37,8 +37,15 @@ success() {
     echo -e "${Green}$*${Color_Off}"
 }
 
+tildify() {
+    if [[ "$1" == "$HOME/"* ]]; then
+        echo "\$HOME/${1#"$HOME/"}"
+    else
+        echo "$1"
+    fi
+}
+
 # --- Configuration ---
-# You can override these variables, e.g. `OWNER=foo/bar ./install.sh`
 OWNER="${OWNER:-jassielof/typst-install}"
 TYPST_REPO="typst/typst"
 BASE_URL="https://jassielof.github.io/typst-install"
@@ -46,7 +53,6 @@ BASE_URL="https://jassielof.github.io/typst-install"
 # --- Main Script ---
 
 if [[ ${OS:-} == "Windows_NT" ]]; then
-    # The error function exits, so this info message must come first.
     info "For Windows, please use the PowerShell script:"
     info "irm $BASE_URL/install.ps1 | iex"
     error "This script is not for Windows."
@@ -96,24 +102,15 @@ mv -f "$typst_install/$folder/typst" "$exe"
 chmod +x "$exe"
 
 # Move license and other files to the root of typst_install
-# Use a temporary directory to avoid issues with `mv` source and destination being the same
 temp_dir=$(mktemp -d)
 mv "$typst_install/$folder"/* "$temp_dir/"
 mv "$temp_dir"/* "$typst_install/"
 rm -rf "$temp_dir"
 rm -rf "${typst_install:?}/${folder:?}"
 
-tildify() {
-    if [[ "$1" == "$HOME/"* ]]; then
-        echo "\$HOME/${1#"$HOME/"}"
-    else
-        echo "$1"
-    fi
-}
-
 success "Typst was installed successfully to ${Bold_Green}$(tildify "$exe")"
 
-# --- Shell Setup: PATH, TYPST_ROOT, and Completions ---
+# --- Shell Setup: PATH and Completions ---
 
 # Detect all available shells
 declare -A available_shells
@@ -137,17 +134,20 @@ if ! command -v typst >/dev/null; then
                 continue
             fi
 
-            install_dir_fish="\"$typst_install\""
+            install_dir_fish="$typst_install"
             if [[ "$typst_install" == "$HOME/"* ]]; then
                 install_dir_fish="\$HOME/${typst_install#"$HOME/"}"
             fi
-            profile_cmd=$(cat <<EOF
+
+            profile_cmd=$(
+                cat <<EOF
 set -gx TYPST_INSTALL $install_dir_fish
 set -gx TYPST_ROOT $install_dir_fish
 fish_add_path "\$TYPST_INSTALL/bin"
 EOF
-)
+            )
             ;;
+
         zsh | bash)
             # Check if already configured
             if [[ -f "$profile_path" ]] && grep -q "TYPST_INSTALL" "$profile_path" 2>/dev/null; then
@@ -160,47 +160,41 @@ EOF
                 install_dir_bash="\$HOME/${typst_install#"$HOME/"}"
             fi
 
-            profile_cmd=$(cat <<EOF
+            profile_cmd=$(
+                cat <<EOF
 export TYPST_INSTALL="$install_dir_bash"
 export TYPST_ROOT="$install_dir_bash"
 export PATH="\$TYPST_INSTALL/bin:\$PATH"
 EOF
-)
+            )
             ;;
         esac
 
+        # Write to profile
         if [[ -w "$profile_path" || (! -e "$profile_path" && -w "$(dirname "$profile_path")") ]]; then
-            mkdir -p "$(dirname "$profile_path")"
             {
                 echo -e '\n# Typst'
                 echo "$profile_cmd"
             } >>"$profile_path"
             success "Added Typst to PATH in $(tildify "$profile_path")"
         else
-            echo
-            info "Could not automatically modify $(tildify "$profile_path")"
-            info "Please add the following to that file:"
-            echo
-            info "${Bold_White}$profile_cmd${Color_Off}"
+            info "Could not automatically add Typst to $(tildify "$profile_path")"
+            info "Please add manually: ${Bold_White}$profile_cmd${Color_Off}"
         fi
     done
 
+    # Suggest how to reload the current shell
     echo
-    current_shell=$(basename "$SHELL")
-    case "$current_shell" in
-        fish)
-            info "To get started in your current shell, run:"
-            info "${Bold_White}  source $(tildify "$HOME/.config/fish/config.fish")${Color_Off}"
-            ;;
-        zsh)
-            info "To get started in your current shell, run:"
-            info "${Bold_White}  exec $SHELL${Color_Off}"
-            ;;
-        bash)
-            info "To get started in your current shell, run:"
-            info "${Bold_White}  source $(tildify "$HOME/.bashrc")${Color_Off}"
-            ;;
-    esac
+    if [[ -n "${SHELL:-}" ]]; then
+        shell_name=$(basename "$SHELL")
+        info "To use Typst in your current shell, run:"
+        case "$shell_name" in
+        fish) info "  ${Bold_White}source ~/.config/fish/config.fish${Color_Off}" ;;
+        zsh) info "  ${Bold_White}source ~/.zshrc${Color_Off}" ;;
+        bash) info "  ${Bold_White}source ~/.bashrc${Color_Off}" ;;
+        *) info "  ${Bold_White}exec $SHELL${Color_Off}" ;;
+        esac
+    fi
 fi
 
 # Install shell completions for all detected shells
@@ -208,21 +202,26 @@ echo
 info "Setting up shell completions for all detected shells..."
 
 for shell_name in "${!available_shells[@]}"; do
+    profile_path="${available_shells[$shell_name]}"
+
     case "$shell_name" in
     fish)
         completions_dir="$HOME/.config/fish/completions"
-        mkdir -p "$completions_dir"
-        completion_file="$completions_dir/typst.fish"
+        completions_file="$completions_dir/typst.fish"
 
-        if [[ -f "$completion_file" ]] && grep -q "typst completions fish" "$completion_file" 2>/dev/null; then
-            info "Fish completions already configured."
+        if [[ -f "$completions_file" ]]; then
+            info "Fish completions already installed."
         else
-            echo "$exe completions fish | source" > "$completion_file"
-            success "Fish completions configured at $(tildify "$completion_file")"
+            if mkdir -p "$completions_dir" 2>/dev/null && [[ -w "$completions_dir" ]]; then
+                "$exe" completions fish >"$completions_file"
+                success "Fish completions installed to $(tildify "$completions_file")"
+            else
+                info "Could not install Fish completions to $(tildify "$completions_file")"
+            fi
         fi
         ;;
+
     zsh)
-        profile_path="$HOME/.zshrc"
         # shellcheck disable=SC2016
         completion_cmd='autoload -Uz compinit && compinit && eval "$('$exe' completions zsh)"'
 
@@ -241,8 +240,8 @@ for shell_name in "${!available_shells[@]}"; do
             info "Zsh completions already configured."
         fi
         ;;
+
     bash)
-        profile_path="$HOME/.bashrc"
         # shellcheck disable=SC2016
         completion_cmd='eval "$('$exe' completions bash)"'
 
@@ -263,6 +262,15 @@ for shell_name in "${!available_shells[@]}"; do
         ;;
     esac
 done
+
+# --- Test Installation ---
+echo
+if command -v typst >/dev/null 2>&1; then
+    success "Installation verified! Running 'typst --version'..."
+    "$exe" --version
+else
+    info "Installation complete! Reload your shell to use Typst."
+fi
 
 echo
 info "Run 'typst --help' to get started."
