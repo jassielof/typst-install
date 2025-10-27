@@ -8,7 +8,6 @@ function Install-Typst {
     # --- Configuration ---
     $Owner = if ($env:OWNER -and $env:OWNER.ToLower() -ne 'true') { $env:OWNER } else { 'jassielof/typst-install' }
     $TypstRepo = 'typst/typst'
-    $CompletionsDir = 'completions'
     $BaseUrl = 'https://jassielof.github.io/typst-install'
 
     # --- Argument Parsing ---
@@ -61,6 +60,18 @@ function Install-Typst {
     $null = Move-Item -Path $TypstExeSource -Destination $Exe -Force
     $null = Remove-Item $ExtractedFolder -Recurse -Force
 
+    # --- Environment Variables ---
+    Write-Host "Setting TYPST_INSTALL environment variable..."
+    # For current session
+    $env:TYPST_INSTALL = $TypstInstall
+
+    # For future sessions (User environment variable)
+    try {
+        [System.Environment]::SetEnvironmentVariable('TYPST_INSTALL', $TypstInstall, 'User')
+    } catch {
+        Write-Warning "Failed to set TYPST_INSTALL environment variable permanently. You may need to do it manually."
+    }
+
     # --- PATH Configuration ---
     Write-Host "Adding Typst to PATH..."
     # For current session
@@ -85,18 +96,13 @@ function Install-Typst {
     # --- Shell Completions ---
     Write-Host "Installing PowerShell completions..."
     try {
-        $CompletionUrl = "$BaseUrl/$CompletionsDir/typst.ps1"
-        $CompletionFile = Join-Path $TypstInstall 'typst-completions.ps1'
-
-        Invoke-WebRequest -Uri $CompletionUrl -OutFile $CompletionFile -UseBasicParsing
-
         if (!(Test-Path $PROFILE)) {
             $null = New-Item -Path $PROFILE -ItemType File -Force
         }
 
-        $SourceCommand = ". `"$CompletionFile`""
-        if (!(Select-String -Path $PROFILE -Pattern ([regex]::Escape($SourceCommand)) -Quiet)) {
-            Add-Content -Path $PROFILE -Value "`n# Typst Completions`n$SourceCommand"
+        $CompletionCommand = '(& typst completions powershell) | Out-String | Invoke-Expression'
+        if (!(Select-String -Path $PROFILE -Pattern ([regex]::Escape($CompletionCommand)) -Quiet)) {
+            Add-Content -Path $PROFILE -Value "`n# Typst Completions`n$CompletionCommand"
             Write-Host "Completions enabled for future sessions. Please restart your shell or run '. `$PROFILE`'."
         } else {
             Write-Host "Completions are already configured."
