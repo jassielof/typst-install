@@ -113,18 +113,32 @@ success "Typst was installed successfully to ${Bold_Green}$(tildify "$exe")"
 # --- Shell Setup: PATH and Completions ---
 
 # Detect all available shells
-declare -A available_shells
-[[ -f "$HOME/.config/fish/config.fish" ]] || command -v fish >/dev/null 2>&1 && available_shells[fish]="$HOME/.config/fish/config.fish"
-[[ -f "$HOME/.zshrc" ]] || command -v zsh >/dev/null 2>&1 && available_shells[zsh]="$HOME/.zshrc"
-[[ -f "$HOME/.bashrc" ]] || command -v bash >/dev/null 2>&1 && available_shells[bash]="$HOME/.bashrc"
+available_shells=()
+available_paths=()
+
+if [[ -f "$HOME/.config/fish/config.fish" ]] || command -v fish >/dev/null 2>&1; then
+    available_shells+=("fish")
+    available_paths+=("$HOME/.config/fish/config.fish")
+fi
+
+if [[ -f "$HOME/.zshrc" ]] || command -v zsh >/dev/null 2>&1; then
+    available_shells+=("zsh")
+    available_paths+=("$HOME/.zshrc")
+fi
+
+if [[ -f "$HOME/.bashrc" ]] || command -v bash >/dev/null 2>&1; then
+    available_shells+=("bash")
+    available_paths+=("$HOME/.bashrc")
+fi
 
 # Add to PATH if not already there
 if ! command -v typst >/dev/null; then
     echo
     info "Adding Typst to your PATH for all detected shells..."
 
-    for shell_name in "${!available_shells[@]}"; do
-        profile_path="${available_shells[$shell_name]}"
+    for i in "${!available_shells[@]}"; do
+        shell_name="${available_shells[$i]}"
+        profile_path="${available_paths[$i]}"
 
         case "$shell_name" in
         fish)
@@ -201,8 +215,9 @@ fi
 echo
 info "Setting up shell completions for all detected shells..."
 
-for shell_name in "${!available_shells[@]}"; do
-    profile_path="${available_shells[$shell_name]}"
+for i in "${!available_shells[@]}"; do
+    shell_name="${available_shells[$i]}"
+    profile_path="${available_paths[$i]}"
 
     case "$shell_name" in
     fish)
