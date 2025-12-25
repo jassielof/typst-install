@@ -36,6 +36,9 @@
 		"vite": "^7.3.0"
 	},
 	"dependencies": {
+		"@fontsource-variable/google-sans-code": "^5.2.3",
+		"@fontsource/buenard": "^5.2.11",
+		"@fontsource/ibm-plex-serif": "^5.2.7",
 		"@lucide/svelte": "^0.562.0",
 		"daisyui": "^5.5.14",
 		"lucide-svelte": "^0.562.0"

@@ -34,8 +34,8 @@
 <div class="bg-base-200 flex min-h-screen flex-col items-center justify-center p-4">
   <div class="w-full max-w-md text-center md:max-w-2xl">
     <h1 class="font-[Buenard] text-5xl font-bold md:text-7xl">typst installer</h1>
-    <p class="text-base-content/70 py-6 font-serif text-lg italic md:text-xl">
-      The modern, scriptable typesetting system.
+    <p class="text-base-content/70 py-6 text-lg italic md:text-xl">
+      For the modern, scriptable typesetting system.
     </p>
 
     <div role="tablist" class="tabs tabs-border justify-center" class:opacity-0={!mounted}>
@@ -113,6 +113,6 @@
   /* Smooth fade-in when mounted */
   div[role='tablist'],
   .mt-4 {
-    transition: opacity 225ms ease-in;
+    transition: opacity 200ms ease-in;
   }
 </style>
