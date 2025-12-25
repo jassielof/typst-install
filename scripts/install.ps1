@@ -61,7 +61,7 @@ function Install-Typst {
     $env:TYPST_INSTALL = $TypstInstall
     
     # Set Typst package directories (Windows style)
-    $LocalAppData = if ($env:LOCALAPPDATA) { $env:LOCALAPPDATA } else { Join-Path $HomeDir 'AppData\Local' }
+    $LocalAppData = if ($env:LOCALAPPDATA) { $env:LOCALAPPDATA } else { Join-Path $env:USERPROFILE 'AppData\Local' }
     $env:TYPST_PACKAGE_PATH = Join-Path $LocalAppData 'typst\packages'
     $env:TYPST_PACKAGE_CACHE_PATH = Join-Path $LocalAppData 'typst\cache\packages'
 

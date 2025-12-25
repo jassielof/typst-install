@@ -203,8 +203,8 @@ if ! command -v typst >/dev/null; then
                         cat <<'EOF'
 # Typst environment
 fish_add_path "$HOME/.local/bin"
-set -gx XDG_DATA_HOME "$HOME/.local/share"
-set -gx XDG_CACHE_HOME "$HOME/.cache"
+set -q XDG_DATA_HOME; or set -gx XDG_DATA_HOME "$HOME/.local/share"
+set -q XDG_CACHE_HOME; or set -gx XDG_CACHE_HOME "$HOME/.cache"
 set -gx TYPST_PACKAGE_PATH "$XDG_DATA_HOME/typst/packages"
 set -gx TYPST_PACKAGE_CACHE_PATH "$XDG_CACHE_HOME/typst/packages"
 EOF
