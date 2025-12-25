@@ -37,7 +37,7 @@ function Install-Typst {
     # Write-Host "Downloading Typst v$Version from $URL" # this results in vlatest if latest is used so let's resolve to the actual version to
     $Version = if ($Version -eq 'latest') {
         try {
-            $LatestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/tags/${TypstRepo}/releases/latest" -UseBasicParsing
+            $LatestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/${TypstRepo}/releases/latest" -UseBasicParsing
             $LatestRelease.tag_name
         } catch {
             Write-Error "Failed to fetch the latest version information: $_"
