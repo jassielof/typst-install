@@ -190,18 +190,23 @@ if ! command -v typst >/dev/null; then
                         continue
                     fi
                     # Also check for XDG-style configuration
-                    if [[ "$(uname)" == "Linux" && -z "${TYPST_INSTALL:-}" ]] && grep -q "\\.local/bin" "$profile_path" 2>/dev/null; then
-                        info "Fish already configured (.local/bin in PATH), skipping..."
+                    if [[ "$(uname)" == "Linux" && -z "${TYPST_INSTALL:-}" ]] && grep -q "TYPST_PACKAGE_PATH\|Typst environment" "$profile_path" 2>/dev/null; then
+                        info "Fish already configured (Typst environment), skipping..."
                         continue
                     fi
                 fi
 
                 # For fish, determine what to add
                 if [[ "$(uname)" == "Linux" && -z "${TYPST_INSTALL:-}" ]]; then
-                    # XDG path on Linux - just add to PATH
+                    # XDG path on Linux - set XDG and Typst environment variables
                     profile_cmd=$(
-                        cat <<EOF
+                        cat <<'EOF'
+# Typst environment
 fish_add_path "$HOME/.local/bin"
+set -gx XDG_DATA_HOME "$HOME/.local/share"
+set -gx XDG_CACHE_HOME "$HOME/.cache"
+set -gx TYPST_PACKAGE_PATH "$XDG_DATA_HOME/typst/packages"
+set -gx TYPST_PACKAGE_CACHE_PATH "$XDG_CACHE_HOME/typst/packages"
 EOF
                     )
                 else
@@ -228,18 +233,23 @@ EOF
                         continue
                     fi
                     # Also check for XDG-style configuration
-                    if [[ "$(uname)" == "Linux" && -z "${TYPST_INSTALL:-}" ]] && grep -q "\\.local/bin" "$profile_path" 2>/dev/null; then
-                        info "$shell_name already configured (.local/bin in PATH), skipping..."
+                    if [[ "$(uname)" == "Linux" && -z "${TYPST_INSTALL:-}" ]] && grep -q "TYPST_PACKAGE_PATH\|Typst environment" "$profile_path" 2>/dev/null; then
+                        info "$shell_name already configured (Typst environment), skipping..."
                         continue
                     fi
                 fi
 
                 # For bash/zsh, determine what to add
                 if [[ "$(uname)" == "Linux" && -z "${TYPST_INSTALL:-}" ]]; then
-                    # XDG path on Linux - just add to PATH
+                    # XDG path on Linux - set XDG and Typst environment variables
                     profile_cmd=$(
-                        cat <<EOF
-export PATH="\$HOME/.local/bin:\$PATH"
+                        cat <<'EOF'
+# Typst environment
+export PATH="$HOME/.local/bin:$PATH"
+export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+export TYPST_PACKAGE_PATH="$XDG_DATA_HOME/typst/packages"
+export TYPST_PACKAGE_CACHE_PATH="$XDG_CACHE_HOME/typst/packages"
 EOF
                     )
                 else

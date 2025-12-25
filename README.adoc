@@ -42,6 +42,28 @@ License and documentation files are stored in:
 * *Linux*: `$HOME/.local/share/typst`
 * *macOS/Windows*: `$HOME/.typst`
 
+=== Environment Variables
+
+The installer automatically sets the following environment variables:
+
+==== Linux
+* `XDG_DATA_HOME`: `$HOME/.local/share` (if not already set)
+* `XDG_CACHE_HOME`: `$HOME/.cache` (if not already set)
+* `TYPST_PACKAGE_PATH`: `$XDG_DATA_HOME/typst/packages`
+* `TYPST_PACKAGE_CACHE_PATH`: `$XDG_CACHE_HOME/typst/packages`
+* `PATH`: Includes `$HOME/.local/bin`
+
+==== macOS (when using custom TYPST_INSTALL)
+* `TYPST_INSTALL`: Installation directory
+* `TYPST_ROOT`: Same as TYPST_INSTALL
+* `PATH`: Includes `$TYPST_INSTALL/bin`
+
+==== Windows
+* `TYPST_INSTALL`: Installation directory
+* `TYPST_PACKAGE_PATH`: `%LOCALAPPDATA%\typst\packages`
+* `TYPST_PACKAGE_CACHE_PATH`: `%LOCALAPPDATA%\typst\cache\packages`
+* `PATH`: Includes installation bin directory
+
 === Custom Installation Location
 
 .Linux, macOS, WSL
@@ -70,6 +92,64 @@ $Env:TYPST_INSTALL = "C:\Program Files\typst"
 [source, ps1, subs="attributes"]
 ----
 $v="0.10.0"; {dos-script}
+----
+
+== Uninstallation
+
+To uninstall Typst, remove the installed files and clean up shell configuration:
+
+=== Linux
+
+[source, sh]
+----
+# Remove binary
+rm -f ~/.local/bin/typst
+
+# Remove data files
+rm -rf ~/.local/share/typst
+
+# Remove cache
+rm -rf ~/.cache/typst
+
+# Remove configuration from shell profiles
+# For bash: edit ~/.bashrc and remove the "# Typst environment" section
+# For zsh: edit ~/.zshrc and remove the "# Typst environment" section
+# For fish: rm ~/.config/fish/completions/typst.fish and edit ~/.config/fish/config.fish
+----
+
+=== macOS
+
+[source, sh]
+----
+# Remove installation directory
+rm -rf ~/.typst
+
+# Remove completions and configuration from shell profiles
+# For bash: edit ~/.bashrc and remove the "# Typst" section
+# For zsh: edit ~/.zshrc and remove the "# Typst" section
+# For fish: rm ~/.config/fish/completions/typst.fish and edit ~/.config/fish/config.fish
+----
+
+=== Windows
+
+[source, powershell]
+----
+# Remove installation directory
+Remove-Item -Recurse -Force "$env:USERPROFILE\.typst"
+
+# Remove cache
+Remove-Item -Recurse -Force "$env:LOCALAPPDATA\typst"
+
+# Remove environment variables
+[System.Environment]::SetEnvironmentVariable('TYPST_INSTALL', $null, 'User')
+[System.Environment]::SetEnvironmentVariable('TYPST_PACKAGE_PATH', $null, 'User')
+[System.Environment]::SetEnvironmentVariable('TYPST_PACKAGE_CACHE_PATH', $null, 'User')
+
+# Remove from PATH (manual step required)
+# Open System Properties > Environment Variables and remove the Typst bin directory from PATH
+
+# Remove PowerShell completions from profile
+# Edit your PowerShell profile and remove the "# Typst Completions" section
 ----
 
 == Disclaimer
