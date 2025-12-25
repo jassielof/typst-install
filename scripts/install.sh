@@ -127,9 +127,7 @@ if [[ -d "$temp_extract_dir/$folder" ]]; then
     shopt -s nullglob
     # Move remaining files (LICENSE, README, etc.) to data_dir
     for item in "$temp_extract_dir/$folder"/*; do
-        if [[ -e "$item" ]]; then
-            mv -f "$item" "$data_dir/"
-        fi
+        mv -f "$item" "$data_dir/"
     done
     shopt -u nullglob
 fi
@@ -186,9 +184,16 @@ if ! command -v typst >/dev/null; then
             case "$shell_name" in
             fish)
                 # Check if already configured
-                if [[ -f "$profile_path" ]] && grep -q "TYPST_INSTALL" "$profile_path" 2>/dev/null; then
-                    info "Fish already configured, skipping..."
-                    continue
+                if [[ -f "$profile_path" ]]; then
+                    if grep -q "TYPST_INSTALL" "$profile_path" 2>/dev/null; then
+                        info "Fish already configured (TYPST_INSTALL), skipping..."
+                        continue
+                    fi
+                    # Also check for XDG-style configuration
+                    if [[ "$(uname)" == "Linux" && -z "${TYPST_INSTALL:-}" ]] && grep -q "\\.local/bin" "$profile_path" 2>/dev/null; then
+                        info "Fish already configured (.local/bin in PATH), skipping..."
+                        continue
+                    fi
                 fi
 
                 # For fish, determine what to add
@@ -217,9 +222,16 @@ EOF
 
             zsh | bash)
                 # Check if already configured
-                if [[ -f "$profile_path" ]] && grep -q "TYPST_INSTALL" "$profile_path" 2>/dev/null; then
-                    info "$shell_name already configured, skipping..."
-                    continue
+                if [[ -f "$profile_path" ]]; then
+                    if grep -q "TYPST_INSTALL" "$profile_path" 2>/dev/null; then
+                        info "$shell_name already configured (TYPST_INSTALL), skipping..."
+                        continue
+                    fi
+                    # Also check for XDG-style configuration
+                    if [[ "$(uname)" == "Linux" && -z "${TYPST_INSTALL:-}" ]] && grep -q "\\.local/bin" "$profile_path" 2>/dev/null; then
+                        info "$shell_name already configured (.local/bin in PATH), skipping..."
+                        continue
+                    fi
                 fi
 
                 # For bash/zsh, determine what to add
