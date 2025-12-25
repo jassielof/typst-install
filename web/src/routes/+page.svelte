@@ -31,10 +31,10 @@
   }
 </script>
 
-<div class="bg-base-200 flex min-h-screen flex-col items-center justify-center p-4">
+<main class="bg-base-200 flex min-h-screen flex-col items-center justify-center p-4">
   <div class="w-full max-w-md text-center md:max-w-2xl">
     <h1 class="font-[Buenard] text-5xl font-bold md:text-7xl">typst installer</h1>
-    <p class="text-base-content/70 py-6 text-lg italic md:text-xl">
+    <p class="text-base-content/90 py-6 text-lg italic md:text-xl">
       For the modern, scriptable typesetting system.
     </p>
 
@@ -93,7 +93,7 @@
       {/if}
     </div>
 
-    <div class="text-base-content/50 mt-8">
+    <div class="text-base-content/80 mt-8">
       <p>
         Need help? Visit the
         <a href={REPO_URL} target="_blank" rel="noopener noreferrer" class="link">
@@ -103,7 +103,7 @@
       <p class="mt-2 text-sm font-bold">This is an unofficial installer.</p>
     </div>
   </div>
-</div>
+</main>
 
 <style>
   /* Smooth fade-in when mounted */
