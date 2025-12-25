@@ -38,7 +38,7 @@
       For the modern, scriptable typesetting system.
     </p>
 
-    <div role="tablist" class="tabs tabs-border justify-center" class:opacity-0={!mounted}>
+    <div role="tablist" class="tabs tabs-border opac justify-center" class:opacity-0={!mounted}>
       <button
         role="tab"
         class={{ tab: true, 'tab-active': os === 'posix' }}
@@ -106,10 +106,6 @@
 </div>
 
 <style>
-  .opacity-0 {
-    opacity: 0;
-  }
-
   /* Smooth fade-in when mounted */
   div[role='tablist'],
   .mt-4 {
