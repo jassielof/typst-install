@@ -36,7 +36,7 @@ function Install-Typst {
     # --- Installation ---
     $Version = if ($Version -eq 'latest') {
         try {
-            $LatestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/${TypstRepo}/releases/latest" -UseBasicParsing
+            Invoke-RestMethod -Uri "https://api.github.com/repos/${TypstRepo}/releases/latest" -UseBasicParsing
         } catch {
             Write-Error "Failed to fetch the latest version information: $_"
             return
