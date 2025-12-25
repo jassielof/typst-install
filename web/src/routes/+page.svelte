@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { Copy, Check } from 'lucide-svelte';
+  import { browser } from '$app/environment';
 
   const REPO_URL = 'https://github.com/jassielof/typst-install';
   const PAGE_URL = 'https://jassielof.github.io/typst-install';
@@ -10,11 +12,13 @@
 
   let os: 'posix' | 'windows' = $state('posix');
   let copiedCommand: string | null = $state(null);
+  let mounted = $state(false);
 
-  $effect(() => {
-    if (navigator.userAgent.includes('Win')) {
+  onMount(() => {
+    if (browser && navigator.userAgent.toLowerCase().includes('win')) {
       os = 'windows';
     }
+    mounted = true;
   });
 
   function copyCommand(command: string) {
@@ -31,29 +35,27 @@
   <div class="w-full max-w-md text-center md:max-w-2xl">
     <h1 class="font-[Buenard] text-5xl font-bold md:text-7xl">typst installer</h1>
     <p class="text-base-content/70 py-6 font-serif text-lg italic md:text-xl">
-      The installer for the modern, scriptable typesetting system.
+      The modern, scriptable typesetting system.
     </p>
 
-    <div role="tablist" class="tabs tabs-border justify-center">
+    <div role="tablist" class="tabs tabs-border justify-center" class:opacity-0={!mounted}>
       <button
         role="tab"
-        class="tab"
-        class:tab-active={os === 'posix'}
+        class={{ tab: true, 'tab-active': os === 'posix' }}
         onclick={() => (os = 'posix')}
       >
         macOS / Linux
       </button>
       <button
         role="tab"
-        class="tab"
-        class:tab-active={os === 'windows'}
+        class={{ tab: true, 'tab-active': os === 'windows' }}
         onclick={() => (os = 'windows')}
       >
         Windows
       </button>
     </div>
 
-    <div class="mt-4">
+    <div class="mt-4" class:opacity-0={!mounted}>
       {#if os === 'posix'}
         <div class="relative">
           <div class="mockup-code text-left">
@@ -65,9 +67,9 @@
             aria-label="Copy POSIX command"
           >
             {#if copiedCommand === POSIX_COMMAND}
-              <Check class=" size-4" />
+              <Check class="size-4" />
             {:else}
-              <Copy class=" size-4" />
+              <Copy class="size-4" />
             {/if}
           </button>
         </div>
@@ -95,10 +97,22 @@
       <p>
         Need help? Visit the
         <a href={REPO_URL} target="_blank" rel="noopener noreferrer" class="link">
-          GitHub repository and file an issue.
+          GitHub repository and file an issue
         </a>.
       </p>
       <p class="mt-2 text-sm font-bold">This is an unofficial installer.</p>
     </div>
   </div>
 </div>
+
+<style>
+  .opacity-0 {
+    opacity: 0;
+  }
+
+  /* Smooth fade-in when mounted */
+  div[role='tablist'],
+  .mt-4 {
+    transition: opacity 225ms ease-in;
+  }
+</style>

@@ -7,3 +7,7 @@
   --font-serif: 'IBM Plex Serif', serif;
   --font-mono: 'Google Sans Code', monospace;
 }
+
+.font-loading {
+  visibility: hidden;
+}
