@@ -34,7 +34,19 @@ function Install-Typst {
     }
 
     # --- Installation ---
-    Write-Host "Downloading Typst v$Version from $URL"
+    # Write-Host "Downloading Typst v$Version from $URL" # this results in vlatest if latest is used so let's resolve to the actual version to avoid confusion
+    $Version = if ($Version -eq 'latest') {
+        try {
+            $LatestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/${TypstRepo}/releases/latest" -UseBasicParsing
+        } catch {
+            Write-Error "Failed to fetch the latest version information: $_"
+            return
+        }
+    } else {
+        $Version
+    }
+    Write-Host "Downloading Typst $Version from $URL"
+
     if (!(Test-Path $BinDir)) {
         $null = New-Item $BinDir -ItemType Directory -Force
     }
