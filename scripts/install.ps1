@@ -59,16 +59,9 @@ function Install-Typst {
     # --- Environment Variables ---
     Write-Host "Setting Typst environment variables..."
     $env:TYPST_INSTALL = $TypstInstall
-    
-    # Set Typst package directories (Windows style)
-    $LocalAppData = if ($env:LOCALAPPDATA) { $env:LOCALAPPDATA } else { Join-Path $env:USERPROFILE 'AppData\Local' }
-    $env:TYPST_PACKAGE_PATH = Join-Path $LocalAppData 'typst\packages'
-    $env:TYPST_PACKAGE_CACHE_PATH = Join-Path $LocalAppData 'typst\cache\packages'
 
     try {
         [System.Environment]::SetEnvironmentVariable('TYPST_INSTALL', $TypstInstall, 'User')
-        [System.Environment]::SetEnvironmentVariable('TYPST_PACKAGE_PATH', $env:TYPST_PACKAGE_PATH, 'User')
-        [System.Environment]::SetEnvironmentVariable('TYPST_PACKAGE_CACHE_PATH', $env:TYPST_PACKAGE_CACHE_PATH, 'User')
     } catch {
         Write-Warning "Failed to set environment variables permanently. You may need to do it manually."
     }

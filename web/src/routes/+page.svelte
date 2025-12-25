@@ -8,8 +8,8 @@
   const POSIX_COMMAND = `curl -fsSL ${POSIX_URL} | bash`;
   const WINDOWS_COMMAND = `irm ${WINDOWS_URL} | iex`;
 
-  let os = $state<'posix' | 'windows'>('posix');
-  let copiedCommand = $state<string | null>(null);
+  let os: 'posix' | 'windows' = $state('posix');
+  let copiedCommand: string | null = $state(null);
 
   $effect(() => {
     if (navigator.userAgent.includes('Win')) {
@@ -27,10 +27,10 @@
   }
 </script>
 
-<div class="flex min-h-screen flex-col items-center justify-center bg-base-200 p-4">
-  <div class="w-full max-w-md md:max-w-2xl text-center">
-    <h1 class="text-5xl font-bold md:text-7xl">Typst</h1>
-    <p class="text-base-content/70 py-6 text-lg md:text-xl">
+<div class="bg-base-200 flex min-h-screen flex-col items-center justify-center p-4">
+  <div class="w-full max-w-md text-center md:max-w-2xl">
+    <h1 class="font-[Buenard] text-5xl font-bold md:text-7xl">typst installer</h1>
+    <p class="text-base-content/70 py-6 font-serif text-lg italic md:text-xl">
       The installer for the modern, scriptable typesetting system.
     </p>
 
@@ -60,14 +60,14 @@
             <pre data-prefix="$"><code>{POSIX_COMMAND}</code></pre>
           </div>
           <button
-            class="btn btn-ghost btn-sm absolute right-1 top-1"
+            class="btn btn-neutral btn-sm absolute top-1 right-1 opacity-70 hover:opacity-100"
             onclick={() => copyCommand(POSIX_COMMAND)}
             aria-label="Copy POSIX command"
           >
             {#if copiedCommand === POSIX_COMMAND}
-              <Check class="h-4 w-4" />
+              <Check class=" size-4" />
             {:else}
-              <Copy class="h-4 w-4" />
+              <Copy class=" size-4" />
             {/if}
           </button>
         </div>
@@ -77,7 +77,7 @@
             <pre data-prefix=">"><code>{WINDOWS_COMMAND}</code></pre>
           </div>
           <button
-            class="btn btn-ghost btn-sm absolute right-1 top-1"
+            class="btn btn-neutral btn-sm absolute top-1 right-1 opacity-70 hover:opacity-100"
             onclick={() => copyCommand(WINDOWS_COMMAND)}
             aria-label="Copy Windows command"
           >
@@ -98,7 +98,7 @@
           GitHub repository and file an issue.
         </a>.
       </p>
-      <p class="mt-2 text-sm">This is an unofficial installer.</p>
+      <p class="mt-2 text-sm font-bold">This is an unofficial installer.</p>
     </div>
   </div>
 </div>

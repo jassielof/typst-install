@@ -161,7 +161,7 @@ fi
 # Add to PATH if not already there
 if ! command -v typst >/dev/null; then
     echo
-    
+
     # For Linux with XDG, check if ~/.local/bin is already in PATH
     path_check_needed=true
     if [[ "$(uname)" == "Linux" && -z "${TYPST_INSTALL:-}" ]]; then
@@ -173,7 +173,7 @@ if ! command -v typst >/dev/null; then
                 ;;
         esac
     fi
-    
+
     if [[ "$path_check_needed" == "true" ]]; then
         info "Adding Typst to your PATH for all detected shells..."
 
@@ -198,15 +198,11 @@ if ! command -v typst >/dev/null; then
 
                 # For fish, determine what to add
                 if [[ "$(uname)" == "Linux" && -z "${TYPST_INSTALL:-}" ]]; then
-                    # XDG path on Linux - set XDG and Typst environment variables
+                    # XDG path on Linux
                     profile_cmd=$(
                         cat <<'EOF'
 # Typst environment
 fish_add_path "$HOME/.local/bin"
-set -q XDG_DATA_HOME; or set -gx XDG_DATA_HOME "$HOME/.local/share"
-set -q XDG_CACHE_HOME; or set -gx XDG_CACHE_HOME "$HOME/.cache"
-set -gx TYPST_PACKAGE_PATH "$XDG_DATA_HOME/typst/packages"
-set -gx TYPST_PACKAGE_CACHE_PATH "$XDG_CACHE_HOME/typst/packages"
 EOF
                     )
                 else
@@ -241,15 +237,11 @@ EOF
 
                 # For bash/zsh, determine what to add
                 if [[ "$(uname)" == "Linux" && -z "${TYPST_INSTALL:-}" ]]; then
-                    # XDG path on Linux - set XDG and Typst environment variables
+                    # XDG path on Linux
                     profile_cmd=$(
                         cat <<'EOF'
 # Typst environment
 export PATH="$HOME/.local/bin:$PATH"
-export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
-export TYPST_PACKAGE_PATH="$XDG_DATA_HOME/typst/packages"
-export TYPST_PACKAGE_CACHE_PATH="$XDG_CACHE_HOME/typst/packages"
 EOF
                     )
                 else
