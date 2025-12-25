@@ -123,12 +123,15 @@ chmod +x "$exe"
 
 # Move license and other files to data directory
 if [[ -d "$temp_extract_dir/$folder" ]]; then
+    # Enable nullglob to handle empty directories safely
+    shopt -s nullglob
     # Move remaining files (LICENSE, README, etc.) to data_dir
     for item in "$temp_extract_dir/$folder"/*; do
         if [[ -e "$item" ]]; then
             mv -f "$item" "$data_dir/"
         fi
     done
+    shopt -u nullglob
 fi
 
 # Clean up
@@ -162,10 +165,18 @@ if ! command -v typst >/dev/null; then
     echo
     
     # For Linux with XDG, check if ~/.local/bin is already in PATH
-    if [[ "$(uname)" == "Linux" && -z "${TYPST_INSTALL:-}" && ":$PATH:" == *":$HOME/.local/bin:"* ]]; then
-        info "Typst installed to $HOME/.local/bin, which is already in your PATH."
-        info "You may need to restart your shell or run: hash -r"
-    else
+    path_check_needed=true
+    if [[ "$(uname)" == "Linux" && -z "${TYPST_INSTALL:-}" ]]; then
+        case ":$PATH:" in
+            *":$HOME/.local/bin:"*)
+                info "Typst installed to $HOME/.local/bin, which is already in your PATH."
+                info "You may need to restart your shell or run: hash -r"
+                path_check_needed=false
+                ;;
+        esac
+    fi
+    
+    if [[ "$path_check_needed" == "true" ]]; then
         info "Adding Typst to your PATH for all detected shells..."
 
         for i in "${!available_shells[@]}"; do
