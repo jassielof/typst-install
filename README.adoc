@@ -11,8 +11,6 @@ ifdef::env-github[]
 :warning-caption: :warning:
 endif::[]
 
-// TODO: If my completions PR is merged, update the install scripts to use `typst completions` instead of manually generating the completions.
-
 Installer script for Typst.
 
 == Usage
@@ -31,7 +29,20 @@ Installer script for Typst.
 
 == Options
 
-=== Installation Location
+=== Default Installation Location
+
+By default, Typst is installed to:
+
+* *Linux*: `$HOME/.local/bin` (following XDG Base Directory specification)
+* *macOS*: `$HOME/.typst/bin`
+* *Windows*: `$HOME/.typst/bin`
+
+License and documentation files are stored in:
+
+* *Linux*: `$HOME/.local/share/typst`
+* *macOS/Windows*: `$HOME/.typst`
+
+=== Custom Installation Location
 
 .Linux, macOS, WSL
 [source,sh, subs="attributes"]

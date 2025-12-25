@@ -75,8 +75,24 @@ folder="typst-$target"
 file="$folder$archive_ext"
 
 # Determine installation directory
-typst_install="${TYPST_INSTALL:-$HOME/.typst}"
-bin_dir="$typst_install/bin"
+# Use XDG Base Directory specification on Linux, traditional approach on macOS
+if [[ -z "${TYPST_INSTALL:-}" ]]; then
+    if [[ "$(uname)" == "Linux" ]]; then
+        # XDG Base Directory: use $HOME/.local for Linux
+        typst_install="$HOME/.local"
+        bin_dir="$typst_install/bin"
+        data_dir="$typst_install/share/typst"
+    else
+        # macOS: keep using $HOME/.typst for backward compatibility
+        typst_install="$HOME/.typst"
+        bin_dir="$typst_install/bin"
+        data_dir="$typst_install"
+    fi
+else
+    typst_install="$TYPST_INSTALL"
+    bin_dir="$typst_install/bin"
+    data_dir="$typst_install"
+fi
 exe="$bin_dir/typst"
 
 # Determine version to install
@@ -89,24 +105,34 @@ fi
 
 # Download and extract
 info "Downloading Typst from $url"
-mkdir -p "$typst_install"
-curl --fail --location --progress-bar -o "$typst_install/$file" "$url" || error "Failed to download Typst"
+# Create a temporary directory for extraction
+temp_extract_dir=$(mktemp -d)
+curl --fail --location --progress-bar -o "$temp_extract_dir/$file" "$url" || error "Failed to download Typst"
 
 info "Extracting archive..."
-tar -xJf "$typst_install/$file" -C "$typst_install" || error "Failed to extract Typst"
-rm -f "$typst_install/$file"
+tar -xJf "$temp_extract_dir/$file" -C "$temp_extract_dir" || error "Failed to extract Typst"
+rm -f "$temp_extract_dir/$file"
 
 # Organize files
 mkdir -p "$bin_dir"
-mv -f "$typst_install/$folder/typst" "$exe"
+mkdir -p "$data_dir"
+
+# Move the binary
+mv -f "$temp_extract_dir/$folder/typst" "$exe"
 chmod +x "$exe"
 
-# Move license and other files to the root of typst_install
-temp_dir=$(mktemp -d)
-mv "$typst_install/$folder"/* "$temp_dir/"
-mv "$temp_dir"/* "$typst_install/"
-rm -rf "$temp_dir"
-rm -rf "${typst_install:?}/${folder:?}"
+# Move license and other files to data directory
+if [[ -d "$temp_extract_dir/$folder" ]]; then
+    # Move remaining files (LICENSE, README, etc.) to data_dir
+    for item in "$temp_extract_dir/$folder"/*; do
+        if [[ -e "$item" ]]; then
+            mv -f "$item" "$data_dir/"
+        fi
+    done
+fi
+
+# Clean up
+rm -rf "$temp_extract_dir"
 
 success "Typst was installed successfully to ${Bold_Green}$(tildify "$exe")"
 
@@ -134,68 +160,95 @@ fi
 # Add to PATH if not already there
 if ! command -v typst >/dev/null; then
     echo
-    info "Adding Typst to your PATH for all detected shells..."
+    
+    # For Linux with XDG, check if ~/.local/bin is already in PATH
+    if [[ "$(uname)" == "Linux" && -z "${TYPST_INSTALL:-}" && ":$PATH:" == *":$HOME/.local/bin:"* ]]; then
+        info "Typst installed to $HOME/.local/bin, which is already in your PATH."
+        info "You may need to restart your shell or run: hash -r"
+    else
+        info "Adding Typst to your PATH for all detected shells..."
 
-    for i in "${!available_shells[@]}"; do
-        shell_name="${available_shells[$i]}"
-        profile_path="${available_paths[$i]}"
+        for i in "${!available_shells[@]}"; do
+            shell_name="${available_shells[$i]}"
+            profile_path="${available_paths[$i]}"
 
-        case "$shell_name" in
-        fish)
-            # Check if already configured
-            if [[ -f "$profile_path" ]] && grep -q "TYPST_INSTALL" "$profile_path" 2>/dev/null; then
-                info "Fish already configured, skipping..."
-                continue
-            fi
+            case "$shell_name" in
+            fish)
+                # Check if already configured
+                if [[ -f "$profile_path" ]] && grep -q "TYPST_INSTALL" "$profile_path" 2>/dev/null; then
+                    info "Fish already configured, skipping..."
+                    continue
+                fi
 
-            install_dir_fish="$typst_install"
-            if [[ "$typst_install" == "$HOME/"* ]]; then
-                install_dir_fish="\$HOME/${typst_install#"$HOME/"}"
-            fi
+                # For fish, determine what to add
+                if [[ "$(uname)" == "Linux" && -z "${TYPST_INSTALL:-}" ]]; then
+                    # XDG path on Linux - just add to PATH
+                    profile_cmd=$(
+                        cat <<EOF
+fish_add_path "$HOME/.local/bin"
+EOF
+                    )
+                else
+                    install_dir_fish="$typst_install"
+                    if [[ "$typst_install" == "$HOME/"* ]]; then
+                        install_dir_fish="\$HOME/${typst_install#"$HOME/"}"
+                    fi
 
-            profile_cmd=$(
-                cat <<EOF
+                    profile_cmd=$(
+                        cat <<EOF
 set -gx TYPST_INSTALL $install_dir_fish
 set -gx TYPST_ROOT $install_dir_fish
 fish_add_path "\$TYPST_INSTALL/bin"
 EOF
-            )
-            ;;
+                    )
+                fi
+                ;;
 
-        zsh | bash)
-            # Check if already configured
-            if [[ -f "$profile_path" ]] && grep -q "TYPST_INSTALL" "$profile_path" 2>/dev/null; then
-                info "$shell_name already configured, skipping..."
-                continue
-            fi
+            zsh | bash)
+                # Check if already configured
+                if [[ -f "$profile_path" ]] && grep -q "TYPST_INSTALL" "$profile_path" 2>/dev/null; then
+                    info "$shell_name already configured, skipping..."
+                    continue
+                fi
 
-            install_dir_bash="$typst_install"
-            if [[ "$typst_install" == "$HOME/"* ]]; then
-                install_dir_bash="\$HOME/${typst_install#"$HOME/"}"
-            fi
+                # For bash/zsh, determine what to add
+                if [[ "$(uname)" == "Linux" && -z "${TYPST_INSTALL:-}" ]]; then
+                    # XDG path on Linux - just add to PATH
+                    profile_cmd=$(
+                        cat <<EOF
+export PATH="\$HOME/.local/bin:\$PATH"
+EOF
+                    )
+                else
+                    install_dir_bash="$typst_install"
+                    if [[ "$typst_install" == "$HOME/"* ]]; then
+                        install_dir_bash="\$HOME/${typst_install#"$HOME/"}"
+                    fi
 
-            profile_cmd=$(
-                cat <<EOF
+                    profile_cmd=$(
+                        cat <<EOF
 export TYPST_INSTALL="$install_dir_bash"
 export TYPST_ROOT="$install_dir_bash"
 export PATH="\$TYPST_INSTALL/bin:\$PATH"
 EOF
-            )
-            ;;
-        esac
+                    )
+                fi
+                ;;
+            esac
 
-        # Write to profile
-        if [[ -w "$profile_path" || (! -e "$profile_path" && -w "$(dirname "$profile_path")") ]]; then
-            {
-                echo -e '\n# Typst'
-                echo "$profile_cmd"
-            } >>"$profile_path"
-            success "Added Typst to PATH in $(tildify "$profile_path")"
-        else
-            info "Could not automatically add Typst to $(tildify "$profile_path")"
-            info "Please add manually: ${Bold_White}$profile_cmd${Color_Off}"
-        fi
-    done
+            # Write to profile
+            if [[ -w "$profile_path" || (! -e "$profile_path" && -w "$(dirname "$profile_path")") ]]; then
+                {
+                    echo -e '\n# Typst'
+                    echo "$profile_cmd"
+                } >>"$profile_path"
+                success "Added Typst to PATH in $(tildify "$profile_path")"
+            else
+                info "Could not automatically add Typst to $(tildify "$profile_path")"
+                info "Please add manually: ${Bold_White}$profile_cmd${Color_Off}"
+            fi
+        done
+    fi
 
     # Suggest how to reload the current shell
     echo
